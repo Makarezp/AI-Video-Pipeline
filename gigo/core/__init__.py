@@ -11,6 +11,7 @@ from .models import (
 )
 from .transcription import OpenAITranscriptionService
 from .editorial import OpenAIEditorialService
+from .rendering import FFmpegRenderingService
 from .pipeline import VideoPipeline, ProcessingResult, process_video
 
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     # Services
     "OpenAITranscriptionService",
     "OpenAIEditorialService",
+    "FFmpegRenderingService",
     # Pipeline
     "VideoPipeline",
     "ProcessingResult",
