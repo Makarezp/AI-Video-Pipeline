@@ -2,17 +2,25 @@
 
 A "Multimodal Video Distillery" that transforms rambling, unscripted footage into tight, high-energy content.
 
-## ✨ The Gold Standard: Hybrid Engine
-The GIGO engine uses a **Hybrid Multimodal approach** to achieve surgical precision:
+## ✨ Architecture
 
-1.  **Whisper (Audio)**: Generates frame-accurate word anchors.
-2.  **Gemini 3 Flash Preview (Vision + Intelligence)**: "Watches" the video to identify visual errors (eye contact breaks, bad lighting) and "listens" for semantic mistakes (hesitations, false starts).
-3.  **FFmpeg (Rendering)**: Slices and reconstructs the video with high-performance stability.
+GIGO uses a **Clean Architecture** with separated concerns:
 
-## 🚀 Key Features
-- **Temporal Padding**: 50ms lead-in and 150ms decay on segments to prevent clipped words.
-- **Multimodal Analysis**: Cuts based on both what is **said** and what is **seen**.
-- **Gemini 3 Powered**: Native understanding of video context for high-quality editorial decisions.
+```
+gigo/
+├── adapters/          # Infrastructure (FFmpeg, Whisper, Gemini)
+├── services/          # Domain logic (Transcription, Analysis, Timeline)
+├── core/              # Models, Protocols, Orchestrator
+├── prompts/           # Externalized AI prompts
+├── config.py          # Centralized configuration
+└── factory.py         # Dependency injection
+```
+
+### The Pipeline
+1. **Whisper** → Word-level timestamps from audio
+2. **Smart Chunking** → Semantic splits via Gemini Flash
+3. **Parallel Analysis** → Concurrent Gemini 3 analysis
+4. **Hardware Rendering** → Apple Silicon encoder (`h264_videotoolbox`)
 
 ## 🛠️ Setup
 
@@ -29,26 +37,39 @@ GEMINI_API_KEY=your_gemini_key
 
 ## 🎥 Usage
 
-### High-Level Pipeline
+### Recommended: Factory Pattern
 ```python
-from gigo.core import process_video
+from gigo.factory import create_orchestrator
 
-# Analyzes with Whisper + Gemini 3
-result = process_video("raw_video.mp4")
-print(result.summary())
+orchestrator = create_orchestrator()
+edl = orchestrator.process("raw_video.mp4")
+timeline = orchestrator.get_interactive_timeline(edl)
 ```
 
-### Direct Hybrid Service
+### Legacy API (still works)
 ```python
 from gigo.core.hybrid import HybridVideoService
 
 service = HybridVideoService()
-edl = service.analyze_video("raw_video.mp4") # Returns EditDecisionList
+edl = service.analyze_video("raw_video.mp4")
 ```
 
+## 🏃 Quick Start
+
+```bash
+# Start API server
+source .venv/bin/activate
+uvicorn gigo.api:app --reload --port 8000
+
+# Start UI server (in another terminal)
+cd ui && python3 -m http.server 5173
+```
+
+Then open http://localhost:5173
+
 ## 🧪 Testing
-Check out `test_hybrid.py` for a full demonstration of the analysis and `test_render.py` for generating the final video file.
+- `test_hybrid.py` - Full analysis demo
+- `test_render.py` - Final video rendering
 
 ---
 *Garbage in, viral gold out.*
-

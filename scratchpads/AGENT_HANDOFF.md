@@ -1,67 +1,70 @@
 # 🤖 AGENT HANDOFF: Project GIGO (Garbage In, Gold Out)
 
-Welcome, Agent. You are taking over a high-precision video editing engine. Here is your situational awareness report.
+Welcome, Agent. You are taking over a high-precision video editing engine.
+
+---
 
 ## 🎯 The Mission
-Transform rambling, unscripted "talking head" videos into tight, viral content by combining **Whisper timestamps** (perfect anchors) with **Gemini 3 Vision** (human-level judgment).
+Transform rambling, unscripted "talking head" videos into tight, viral content by combining **Whisper timestamps** with **Gemini 3 Vision**.
 
 ---
 
-## 🛠️ Current Architecture: The "Gold Standard"
-We have pivoted to a **Hybrid Multimodal Engine**:
+## 🛠️ Architecture: Clean Architecture V3
 
-1. **Whisper**: Extracts exact word timestamps from audio.
-2. **Gemini 3 Flash Preview**: "Watches" the video + "reads" the transcript to decide what to keep.
-3. **FFmpeg**: Slices the video with surgical precision.
-4. **Temporal Padding**: Every cut has **+50ms lead-in** and **+150ms decay** to prevent audio clipping.
-5. **Human-in-the-Loop UI**: Full-featured web editor with upload, analysis, review, render, and playback.
+```
+gigo/
+├── adapters/              # Infrastructure Layer
+│   ├── ffmpeg.py          # Video processing (extract, compress, split, render)
+│   ├── whisper.py         # Transcription via OpenAI
+│   └── gemini.py          # Video analysis & chunking via Gemini
+├── services/              # Domain Layer
+│   ├── transcription.py   # Coordinates audio extraction + transcription
+│   ├── analysis.py        # Handles parallel analysis & merging
+│   └── timeline.py        # EDL ↔ InteractiveEDL conversion
+├── core/
+│   ├── orchestrator.py    # Thin coordinator (80 lines)
+│   ├── protocols.py       # Interfaces for DI
+│   └── models.py          # Pydantic data models
+├── prompts/               # Externalized AI prompts
+├── config.py              # Centralized configuration
+├── factory.py             # Dependency injection wiring
+└── api.py                 # FastAPI endpoints
+```
 
 ---
 
-## 📍 Key Files
+## 📍 Key Entry Points
 
 | File | Purpose |
 |------|---------|
-| [hybrid.py](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/core/hybrid.py) | Core Whisper + Gemini analysis engine |
-| [api.py](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/api.py) | FastAPI endpoints: `/upload`, `/analyze`, `/render`, `/timeline` |
+| [factory.py](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/factory.py) | Creates fully-wired orchestrator |
+| [orchestrator.py](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/core/orchestrator.py) | Main pipeline coordinator |
+| [api.py](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/api.py) | FastAPI endpoints |
 | [ui/](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/ui/) | Vanilla JS web app |
-| [logs/](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/logs/) | Debug logs from Gemini responses |
 
 ---
 
 ## ✅ What's Done
 
-### Core Engine
-- [x] Gemini 3 integration with `gemini-3-flash-preview`
-- [x] Whisper word-level timestamps
-- [x] Temporal padding (+50ms/-150ms) and overlap merging
-- [x] Debug logging to `logs/` directory
+### Clean Architecture Refactoring
+- [x] **Adapters**: FFmpeg, Whisper, Gemini extracted (675 lines)
+- [x] **Services**: Transcription, Analysis, Timeline (305 lines)
+- [x] **Orchestrator**: Thin coordinator (80 lines vs 810 original)
+- [x] **DI Factory**: Wires all dependencies
+- [x] **Externalized Prompts**: `prompts/analysis.txt`, `prompts/chunking.txt`
+- [x] **Centralized Config**: All settings in `config.py`
 
-### API Layer
-- [x] `POST /upload` - Accept video files
-- [x] `POST /analyze/{filename}` - Run full Whisper + Gemini pipeline
-- [x] `GET /timeline/{edl}` - Load pre-existing EDL as interactive timeline
-- [x] `POST /render` - Render edited video from user overrides
-- [x] `GET /video/{filename}` - Stream video files to browser
-
-### Web UI
-- [x] Drag-and-drop video upload
-- [x] Analysis progress indicator
-- [x] Interactive timeline with keep/remove segment visualization
-- [x] Segment toggle (click to override AI decisions)
-- [x] Playhead indicator showing current video position
-- [x] Render button with output video player
-- [x] Download rendered video
+### Core Features
+- [x] Smart Chunking (semantic splits)
+- [x] Parallel Analysis (async)
+- [x] Hardware-Accelerated Rendering (`h264_videotoolbox`)
 
 ---
 
-## 🚀 Your Next Objective
-The full upload → analyze → edit → render → view flow is working! Consider:
-
-1. **Click-to-seek**: Click on timeline to jump video to that position
-2. **Segment splitting**: Allow user to split a segment into two
-3. **Undo/redo**: Track edit history
-4. **Batch processing**: Queue multiple videos
+## 🚀 Future Objectives
+1. **Unit Tests**: Mock adapters for fast testing
+2. **Multi-File Rendering**: Parallel segment rendering
+3. **Split/Merge UI**: Manual segment manipulation
 
 ---
 
@@ -71,9 +74,8 @@ cd "/Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My Drive/Pro
 source .venv/bin/activate
 uvicorn gigo.api:app --reload --port 8000  # API server
 cd ui && python3 -m http.server 5173       # UI server
-# Open http://localhost:5173
 ```
 
-**Environment**: Requires `OPENAI_API_KEY` and `GEMINI_API_KEY` in `.env`
+**Environment**: Requires `OPENAI_API_KEY` and `GEMINI_API_KEY` in `.env`.
 
 **Ready when you are.**
