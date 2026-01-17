@@ -1,100 +1,73 @@
 Here is the deep, high-level blueprint of the system we are building. Think of this as the Technical Specification you would show to a co-founder.
-The Product Definition
 
-We are building a "Semantic Video Distillery" for mobile creators.
+## The Product Definition
 
-    Input: A raw, unscripted video file (up to 5 mins) where the user rambles, stutters, and repeats themselves.
+We are building a **"Multimodal Video Distillery"** for mobile creators.
 
-    The Black Box: A cloud-based processing engine.
+- **Input**: A raw, unscripted video file (up to 20 mins) where the user rambles, stutters, and repeats themselves.
+- **The Black Box**: A multimodal hybrid processing engine.
+- **Output**: A tight, high-energy video with no mistakes, perfect pacing, and dynamic visual zooms.
 
-    Output: A tight, high-energy, 60-second video with no mistakes, perfect pacing, and dynamic visual zooms.
+---
 
-1. The "X-Ray" Architecture
+## 1. The "X-Ray" Architecture (The Pivot)
 
-We are not building a video editor. We are building an automated Decision Pipeline. The system is composed of three distinct "Intelligences" working in sequence.
-Layer 1: The Ears (Transcription Agent)
+We have pivoted from a simple text-only editor to a **Multimodal Hybrid Engine**. The system uses three distinct intelligences.
 
-    Goal: Turn binary audio data into structured data.
+### Layer 1: The Ears (Transcription Agent)
+- **Goal**: Turn binary audio data into structured word-level anchors.
+- **Technology**: OpenAI Whisper (Verbose JSON).
+- **Why**: Whisper gives us **Frame-Accurate Anchors**. We don't rely on the LLM to guess "when" a word was said. We use Whisper's timestamps as the absolute source of truth for the "bones" of the video.
 
-    Technology: OpenAI Whisper (Turbo/Large model).
+### Layer 2: The Brain (Multimodal Editorial Agent)
+- **Goal**: Replicate the judgment of a world-class human editor.
+- **Technology**: **Gemini 3 Flash Preview**.
+- **The Hybrid Logic**: This is our secret sauce. We feed Gemini 3 the **Compressed Video** + the **Whisper Transcript**.
+  - **Vision**: Gemini "watches" for visual cues (stray glances, confused expressions, bad lighting).
+  - **Audio**: Gemini "listens" for tonal hesitations and filler sounds.
+  - **Decision**: Gemini selects which Whisper-anchored segments to keep, combining visual context with verbal meaning.
 
-    Why: Traditional silence detectors (like in standard apps) are dumb. They only see decibels. They can't tell the difference between a "thinking pause" and a "mistake." Whisper gives us Word-Level Timestamps, allowing us to edit based on content, not just volume.
+### Layer 2.5: The Precision Layer (Safety & Padding)
+- **Timestamp Hallucination Control**: We force Gemini to stay within the bounds of the Whisper anchors.
+- **Temporal Padding**: To prevent "clipped" words, we automatically add:
+  - **50ms Lead-in**: Catches the initial attack of the first word.
+  - **150ms Decay**: Preserves the natural fade-out of the last word.
+- **Overlap Merging**: Intelligent merging logic ensures that padded clips flow into each other seamlessly without technical glitches.
 
-Layer 2: The Brain (Editorial Agent)
+### Layer 3: The Hands (Rendering Engine)
+- **Goal**: Execute surgical cuts with production-grade stability.
+- **Technology**: **FFmpeg Direct (Surgical Slicing)**.
+- **The Viral Zoom**: Hides jump cuts by punching in (Toggle Zoom: 100% → 115%). This makes cuts feel like intentional camera switches rather than errors.
 
-    Goal: Replicate the judgment of a human editor.
+---
 
-    Technology: LLM (GPT-4o-mini or Gemini Flash).
+## 2. The Data Flow (Surgical Efficiency)
 
-    The "Semantic Logic": This is your moat. You feed the transcript to the LLM with a specific prompt: "User repeated this sentence 3 times. Find the best version and delete the first two."
+1. **Upload**: User sends raw video.
+2. **Extraction**: Extract audio for Whisper.
+3. **Compression**: Create a lightweight "Preview Video" (CRF 28) for the Gemini 3 vision model to process quickly.
+4. **Synthesis**:
+   - Whisper → Word Timestamps.
+   - Gemini 3 + Preview Video + Transcript → Keep Decisions.
+5. **Padding & Merging**: Apply temporal buffers and resolve segment overlaps.
+6. **Rendering**: FFmpeg slices the high-quality source and concatenates with crossfades.
 
-    Output: An Edit Decision List (EDL). This is a JSON file containing the exact start/end times of the "Keep Segments."
+---
 
-Layer 3: The Hands (Rendering Engine)
+## 3. The "Secret Sauce" (Meaning-Based Editing)
 
-    Goal: Execute the cuts and add "Production Value."
+Most apps edit based on "silence." We edit based on **Intent**.
 
-    Technology: MoviePy (Python Video Library).
+- **The Semantic Cleanup**: If a creator says "The product... actually... the final result is gold," the engine realizes "The final result is gold" is the intended thought and deletes the hesitation.
+- **The Visual Cleanup**: If the creator looks at their notes in the middle of a sentence, Gemini 3 sees the eye movement and cuts that segment, even if the audio was silent.
 
-    The "Viral Zoom" Pattern: A human editor hides jump cuts by punching in (zooming). Your engine automates this. It reads the EDL and applies a "Toggle Zoom" (100% scale → 115% scale) on every alternate clip. This turns a glitchy jump cut into a stylistic choice.
+---
 
-2. The Data Flow (Lifecycle of a Request)
+## 4. Technical Strategy
 
-This explains how data moves through your system.
+- **Gemini 3**: Chosen for its massive context window and native multimodal native understanding.
+- **FFmpeg**: Chosen over high-level libraries (like MoviePy) for speed and surgical precision in a production environment.
+- **JSON Structured Output**: Using Gemini 3's native JSON mode to ensure the "Brain" always speaks a language the "Hands" (FFmpeg) understand.
 
-    Upload: User sends raw_video.mp4 from the React Native app to your FastAPI endpoint.
-
-    Queue: The server accepts the file, returns a task_id, and pushes the job to a background worker (Redis Queue or simple BackgroundTasks). The connection closes immediately so the user doesn't have to keep the app open.
-
-    Processing (The 30-Second Window):
-
-        GPU Server loads raw_video.mp4.
-
-        Extracts Audio → Whisper → JSON Transcript.
-
-        Sends Transcript → LLM → Clean JSON List.
-
-        MoviePy loads Video → Slices bytes based on JSON → Renders final.mp4.
-
-    Delivery: The app polls GET /status/{task_id}. When the status is "DONE", it downloads final.mp4.
-
-3. The "Secret Sauce" (Why this works)
-
-Most developers fail because they try to edit pixels. You are editing meaning.
-
-    The "False Start" Problem:
-
-        Raw Audio: "The best way... no wait... The number one way to code..."
-
-        Standard App: Cuts the silence between "wait" and "The". Result: "The best way... no wait... The number one way to code..." (Still sounds bad).
-
-        Your App: The LLM sees the semantic duplication. It realizes "The number one way to code" is the intended thought. It deletes the past. Result: "The number one way to code..."
-
-    The "Attention Reset":
-
-        TikTok brains get bored every 3 seconds.
-
-        By coupling the Semantic Cut with a Visual Zoom, you are forcing a "Pattern Interrupt" exactly when the user's brain processes a new sentence. It creates a rhythm of Statement → Cut/Zoom → Statement that is highly addictive.
-
-4. Why this Stack? (Technical Strategy)
-
-    Python: The only language that has first-class support for both AI (Whisper/LLMs) and Video (MoviePy).
-
-    FastAPI: High-performance async. Needed because video processing is I/O heavy.
-
-    RunPod / GPU Cloud: You cannot run Whisper efficiently on a standard CPU web server (like Heroku). You need a cheap NVIDIA GPU (T4) to transcribe 5 minutes of video in 10 seconds.
-
-This is the system. It is a "Content Refinery." Garbage in, viral gold out.
-
-
-4. Logic Assurance Layer (LangChain & Pydantic)
-
-To ensure the system is production-grade and crash-resistant, we do not rely on raw string parsing. We implement a dedicated Validation Layer between the "Brain" (LLM) and the "Hands" (MoviePy).
-
-    Schema Enforcement (Pydantic): We define strict BaseModel schemas for the Edit Decision List (EDL). This acts as a "firewall" between the LLM’s probabilistic text generation and the deterministic video rendering engine. Pydantic validators run automatically to catch hallucinations—such as start_time being negative or end_time occurring before start_time—ensuring that only mathematically valid instructions ever reach the rendering pipeline.
-
-    Model Agnostic Orchestration (LangChain): We utilize LangChain’s with_structured_output interface to bind these Pydantic schemas directly to the LLM. This provides two critical advantages:
-
-        Type Safety: It forces the LLM to "think" in JSON objects, significantly reducing parsing errors.
-
-        Vendor Independence: It decouples our core logic from specific API providers. We can swap the underlying model (e.g., moving from OpenAI GPT-4o-mini to Google Gemini Flash to save costs) by changing a single line of code, without rewriting our prompt handling or validation logic.
+---
+*Garbage in, viral gold out.*
