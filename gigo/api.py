@@ -2,16 +2,20 @@
 GIGO API - FastAPI endpoints for Human-in-the-Loop editing.
 
 Endpoints:
+- POST /upload - Upload a video file
+- POST /analyze/{filename} - Run Whisper + Gemini analysis
 - GET /timeline/{edl_file} - Load existing EDL as interactive timeline
 - GET /video/{filename} - Stream video file to browser
 - POST /render - Render video from modified timeline
 """
 
 import json
+import shutil
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -19,6 +23,9 @@ from pydantic import BaseModel
 from gigo.core.models import EditDecisionList, InteractiveEDL, KeepSegment
 from gigo.core.rendering import FFmpegRenderingService
 from gigo.core.hybrid import HybridVideoService
+
+# Load environment variables
+load_dotenv()
 
 app = FastAPI(
     title="GIGO API",
@@ -76,6 +83,94 @@ def list_videos():
                 }
             )
     return {"videos": videos}
+
+
+@app.post("/upload")
+async def upload_video(file: UploadFile = File(...)):
+    """
+    Upload a video file.
+
+    The file is saved to the project root directory.
+    """
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
+
+    # Validate file type
+    allowed_extensions = [".mov", ".mp4", ".webm"]
+    suffix = Path(file.filename).suffix.lower()
+    if suffix not in allowed_extensions:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid file type. Allowed: {allowed_extensions}"
+        )
+
+    # Save file to project root
+    destination = PROJECT_ROOT / file.filename
+
+    try:
+        with open(destination, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        return {
+            "success": True,
+            "filename": file.filename,
+            "path": str(destination),
+            "size_mb": destination.stat().st_size / 1024 / 1024,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
+
+
+@app.post("/analyze/{filename}")
+def analyze_video(filename: str):
+    """
+    Run Whisper + Gemini analysis on an uploaded video.
+
+    This is a synchronous operation that may take 1-3 minutes.
+    Returns an InteractiveEDL for the timeline UI.
+    """
+    video_path = PROJECT_ROOT / filename
+
+    if not video_path.exists():
+        raise HTTPException(status_code=404, detail=f"Video not found: {filename}")
+
+    try:
+        # Initialize the hybrid service (requires API keys in environment)
+        service = HybridVideoService()
+
+        print(f"[Analyze] Starting analysis of {filename}...")
+
+        # Run full analysis (Whisper + Gemini)
+        edl = service.analyze_video(video_path)
+
+        # Save EDL to JSON file
+        edl_filename = f"{video_path.stem}.hybrid.edl.json"
+        edl_path = PROJECT_ROOT / edl_filename
+
+        with open(edl_path, "w") as f:
+            json.dump(edl.model_dump(), f, indent=2)
+
+        print(f"[Analyze] Saved EDL to {edl_filename}")
+
+        # Convert to interactive timeline
+        interactive_edl = service.get_interactive_timeline(edl)
+
+        return {
+            "success": True,
+            "timeline": interactive_edl.model_dump(),
+            "video_path": str(video_path),
+            "edl_file": edl_filename,
+            "stats": {
+                "original_duration": edl.original_duration,
+                "final_duration": edl.final_duration,
+                "compression_ratio": edl.compression_ratio,
+                "segments_kept": len(edl.keep_segments),
+            },
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
 
 
 @app.get("/video/{filename:path}")

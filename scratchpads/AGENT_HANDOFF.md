@@ -13,6 +13,7 @@ We have pivoted to a **Hybrid Multimodal Engine**.
 2. **Gemini 3 Flash Preview**: "Watches" the video and "reads" the transcript to decide what to keep.
 3. **FFmpeg**: Slices the video with surgical precision.
 4. **Temporal Padding**: Every cut has a **+50ms lead-in** and **+150ms decay** to prevent audio clipping.
+5. **Human-in-the-Loop UI**: Web-based timeline editor for reviewing and overriding AI decisions.
 
 ---
 
@@ -20,23 +21,40 @@ We have pivoted to a **Hybrid Multimodal Engine**.
 To understand the logic and state of the project, read these files in order:
 
 1.  **[Strategy Blueprint](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/scratchpads/garbageingoldout.md)**: The "North Star" of the product.
-2.  **[Mobile Feedback Proposal](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/scratchpads/mobile_feedback_proposal.md)**: Our latest pivot towards "Human-in-the-Loop" interactive editing.
-3.  **[Core Engine (hybrid.py)](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/core/hybrid.py)**: The actual implementation of the Whisper + Gemini 3 logic.
-4.  **[Walkthrough](file:///Users/acc/.gemini/antigravity/brain/2a4d8dee-6a62-452f-af73-1420bf60c68f/walkthrough.md)**: See the latest test results and a **UI Mockup** of the future mobile app.
+2.  **[Mobile Feedback Proposal](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/scratchpads/mobile_feedback_proposal.md)**: The HITL architecture design.
+3.  **[Core Engine (hybrid.py)](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/core/hybrid.py)**: Whisper + Gemini 3 logic + `get_interactive_timeline()`.
+4.  **[API Layer (api.py)](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/api.py)**: FastAPI endpoints for timeline and rendering.
+5.  **[UI (ui/)](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/ui/)**: Vanilla JS web app for interactive editing.
 
 ---
 
 ## ✅ What's Done
 - [x] **Gemini 3 Integration**: Service is live and using `gemini-3-flash-preview`.
 - [x] **Word Clipping Fix**: Temporal padding and overlap merging are implemented.
-- [x] **Core Cleanup**: All legacy/single-modality services (editorial, transcription) have been deleted. The engine is consolidated.
+- [x] **Core Cleanup**: All legacy/single-modality services deleted. Engine consolidated.
 - [x] **Verification**: Verified with `IMG_1836_1min.MOV` (94.5% content retention).
+- [x] **InteractiveEDL Model**: `TimelineSegment` and `InteractiveEDL` in `models.py`.
+- [x] **get_interactive_timeline()**: Converts keep-only EDL → gapless timeline with keep/remove segments.
+- [x] **FastAPI Server**: `/videos`, `/video/{filename}`, `/timeline/{edl}`, `/render` endpoints.
+- [x] **PoC Web UI**: Timeline visualization with segment toggle (keep ↔ remove).
 
 ---
 
 ## 🚀 Your Next Objective
-We are moving towards a **Mobile Feedback App**.
-1.  **Implement `InteractiveEDL`**: Update the core to return a gapless timeline where every millisecond is labeled as "Keep" or "Remove" (with reasons). This is the data structure the mobile app needs for its colored seekbar.
-2.  **Phase 3 (Viral Zoom)**: Face tracking and dynamic punching in (115% zoom) on alternate clips.
+The HITL PoC is functional! Next steps to consider:
+
+1. **Browser Testing**: Video playback in browser requires `.mp4` (MOV files may not play in all browsers). Consider transcoding test videos.
+2. **Error Handling**: Add better error states in the UI.
+3. **Segment Scrubbing**: Click timeline to seek video to that segment.
+
+
+### To Run the PoC
+```bash
+cd /Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My\ Drive/Projects/GarbageInGoldOut
+source .venv/bin/activate
+uvicorn gigo.api:app --reload --port 8000  # API server
+python3 -m http.server 5173 --directory ui  # UI server
+# Open http://localhost:5173
+```
 
 **Ready when you are.**

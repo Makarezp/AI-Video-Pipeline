@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="app">
         <header class="header">
@@ -16,9 +18,26 @@
         </header>
 
         <main class="main">
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection">
+                <h2>Upload a Video</h2>
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">📁</div>
+                    <p>Drag & drop a video here, or click to select</p>
+                    <p class="upload-hint">Supports .mp4, .mov, .webm</p>
+                    <input type="file" id="fileInput" accept=".mp4,.mov,.webm" hidden>
+                </div>
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p id="uploadStatus">Uploading...</p>
+                </div>
+            </section>
+
             <!-- Video Selector -->
             <section class="video-selector" id="videoSelector">
-                <h2>Select a Video</h2>
+                <h2>Or Select an Existing Video</h2>
                 <div class="video-list" id="videoList">
                     <p class="loading">Loading videos...</p>
                 </div>
@@ -52,11 +71,27 @@
                 </div>
 
                 <div class="actions">
-                    <button class="btn btn-secondary" id="resetBtn">Reset to AI Suggestions</button>
+                    <button class="btn btn-secondary" id="backBtn">← Back</button>
+                    <button class="btn btn-secondary" id="resetBtn">Reset to AI</button>
                     <button class="btn btn-primary" id="renderBtn">
                         <span class="btn-icon">🎬</span>
                         Render Video
                     </button>
+                </div>
+            </section>
+
+            <!-- Output Video Section (after render) -->
+            <section class="output-section" id="outputSection" style="display: none;">
+                <h2>✅ Edited Video Ready!</h2>
+                <div class="video-container">
+                    <video id="outputPlayer" controls></video>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-secondary" id="editAgainBtn">← Edit Again</button>
+                    <a class="btn btn-primary" id="downloadBtn" download>
+                        <span class="btn-icon">⬇️</span>
+                        Download
+                    </a>
                 </div>
             </section>
 
@@ -67,4 +102,5 @@
 
     <script type="module" src="app.js"></script>
 </body>
+
 </html>

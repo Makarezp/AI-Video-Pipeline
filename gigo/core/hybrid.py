@@ -8,8 +8,10 @@ to make editing decisions based on both audio and visual cues.
 
 import os
 import json
+import logging
 import subprocess
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -25,6 +27,27 @@ from .models import (
     Transcript,
     WordSegment,
 )
+
+# Setup file logging
+LOG_DIR = Path(__file__).parent.parent.parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+logger = logging.getLogger("gigo.hybrid")
+logger.setLevel(logging.DEBUG)
+
+# File handler with detailed formatting
+log_file = LOG_DIR / f"hybrid_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+file_handler = logging.FileHandler(log_file)
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(
+    logging.Formatter("%(asctime)s | %(levelname)s | %(message)s", datefmt="%H:%M:%S")
+)
+logger.addHandler(file_handler)
+
+# Also log to console
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+logger.addHandler(console_handler)
 
 
 HYBRID_PROMPT = """You are a video editor cleaning up a talking head video.
@@ -264,15 +287,40 @@ class HybridVideoService:
         # Parse response
         content = response.text.strip()
 
+        # Log raw response
+        logger.debug("=" * 60)
+        logger.debug("RAW GEMINI RESPONSE:")
+        logger.debug(content[:2000] + ("..." if len(content) > 2000 else ""))
+        logger.debug("=" * 60)
+
+        # Save raw response to file for debugging
+        debug_file = (
+            LOG_DIR / f"gemini_response_{datetime.now().strftime('%H%M%S')}.txt"
+        )
+        with open(debug_file, "w") as f:
+            f.write(f"Video: {video_path}\n")
+            f.write(f"Duration: {transcript.duration}s\n")
+            f.write(f"Words: {len(transcript.segments)}\n")
+            f.write("=" * 60 + "\n")
+            f.write(content)
+        logger.info(f"        Saved raw response to {debug_file.name}")
+
         # Handle case where Gemini might wrap JSON in markdown blocks
         if content.startswith("```json"):
             content = content[7:-3].strip()
+            logger.debug("Stripped ```json wrapper")
         elif content.startswith("```"):
             content = content[3:-3].strip()
+            logger.debug("Stripped ``` wrapper")
 
         try:
             result = json.loads(content)
+            logger.debug(f"Parsed JSON successfully. Type: {type(result)}")
+            logger.debug(
+                f"Keys: {result.keys() if isinstance(result, dict) else 'N/A (list)'}"
+            )
         except json.JSONDecodeError as e:
+            logger.error(f"JSON Parsing Error: {e}")
             print(f"        ❌ JSON Parsing Error: {e}")
             # Save for debugging
             with open("failed_response.txt", "w") as f:
@@ -286,10 +334,18 @@ class HybridVideoService:
         # Handle both {"keep_segments": [...]} and [...] formats
         if isinstance(result, dict) and "keep_segments" in result:
             segments_to_process = result["keep_segments"]
+            logger.debug(
+                f"Found 'keep_segments' key with {len(segments_to_process)} items"
+            )
         elif isinstance(result, list):
             segments_to_process = result
+            logger.debug(f"Result is a list with {len(segments_to_process)} items")
         else:
             segments_to_process = []
+            logger.warning(f"Unexpected result format: {type(result)}")
+            logger.debug(f"Result content: {str(result)[:500]}")
+
+        logger.info(f"        Segments from Gemini: {len(segments_to_process)}")
 
         raw_segments = []
         for seg in segments_to_process:
