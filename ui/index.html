@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIGO - Video Editor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>🗑️ → ✨ GIGO</h1>
+            <p class="tagline">Garbage In, Gold Out</p>
+        </header>
+
+        <main class="main">
+            <!-- Video Selector -->
+            <section class="video-selector" id="videoSelector">
+                <h2>Select a Video</h2>
+                <div class="video-list" id="videoList">
+                    <p class="loading">Loading videos...</p>
+                </div>
+            </section>
+
+            <!-- Editor Panel (hidden until video selected) -->
+            <section class="editor" id="editor" style="display: none;">
+                <div class="video-container">
+                    <video id="videoPlayer" controls>
+                        <source src="" type="video/mp4">
+                    </video>
+                </div>
+
+                <div class="timeline-container">
+                    <div class="timeline-header">
+                        <h3>Timeline</h3>
+                        <div class="timeline-legend">
+                            <span class="legend-item legend-keep">Keep</span>
+                            <span class="legend-item legend-remove">Remove</span>
+                        </div>
+                    </div>
+                    <div class="timeline" id="timeline"></div>
+                    <div class="timeline-time">
+                        <span id="currentTime">0:00</span>
+                        <span id="totalTime">0:00</span>
+                    </div>
+                </div>
+
+                <div class="segment-info" id="segmentInfo">
+                    <p class="segment-info-placeholder">Hover over a segment to see details</p>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-secondary" id="resetBtn">Reset to AI Suggestions</button>
+                    <button class="btn btn-primary" id="renderBtn">
+                        <span class="btn-icon">🎬</span>
+                        Render Video
+                    </button>
+                </div>
+            </section>
+
+            <!-- Status Messages -->
+            <div class="status" id="status"></div>
+        </main>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

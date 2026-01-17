@@ -75,6 +75,51 @@ class EditDecisionList(BaseModel):
 
 
 # =============================================================================
+# INTERACTIVE TIMELINE MODELS (Human-in-the-Loop)
+# =============================================================================
+
+
+class TimelineSegment(BaseModel):
+    """A segment with action (keep/remove) and reason for the interactive UI."""
+
+    start: float = Field(ge=0, description="Start time in seconds")
+    end: float = Field(ge=0, description="End time in seconds")
+    action: str = Field(description="'keep' or 'remove'")
+    reason: str = Field(default="", description="Why this action was chosen")
+    original_action: str = Field(
+        default="", description="What the AI originally decided"
+    )
+
+    @field_validator("action")
+    @classmethod
+    def validate_action(cls, v):
+        if v not in ("keep", "remove"):
+            raise ValueError("action must be 'keep' or 'remove'")
+        return v
+
+
+class InteractiveEDL(BaseModel):
+    """
+    Gapless timeline covering 100% of video duration.
+    Every millisecond is either 'keep' or 'remove'.
+    """
+
+    segments: list[TimelineSegment]
+    original_duration: float = Field(ge=0)
+
+    def to_edit_decision_list(self) -> "EditDecisionList":
+        """Convert back to EditDecisionList for rendering (keep segments only)."""
+        keep_segments = [
+            KeepSegment(start=seg.start, end=seg.end, reason=seg.reason)
+            for seg in self.segments
+            if seg.action == "keep"
+        ]
+        return EditDecisionList(
+            keep_segments=keep_segments, original_duration=self.original_duration
+        )
+
+
+# =============================================================================
 # SERVICE PROTOCOLS (Abstractions for decoupling)
 # =============================================================================
 

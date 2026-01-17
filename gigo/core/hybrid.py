@@ -17,7 +17,14 @@ from google import genai
 from google.genai import types
 from openai import OpenAI
 
-from .models import EditDecisionList, KeepSegment, Transcript, WordSegment
+from .models import (
+    EditDecisionList,
+    InteractiveEDL,
+    KeepSegment,
+    TimelineSegment,
+    Transcript,
+    WordSegment,
+)
 
 
 HYBRID_PROMPT = """You are a video editor cleaning up a talking head video.
@@ -349,3 +356,57 @@ class HybridVideoService:
         for seg in transcript.segments:
             lines.append(f"[{seg.start:.2f}-{seg.end:.2f}] {seg.word}")
         return "\n".join(lines)
+
+    def get_interactive_timeline(self, edl: EditDecisionList) -> InteractiveEDL:
+        """
+        Convert keep-only EDL to gapless interactive timeline.
+
+        Fills gaps between keep_segments with 'remove' segments,
+        allowing the UI to display every second of the video.
+        """
+        segments: list[TimelineSegment] = []
+        current_time = 0.0
+
+        # Sort keep segments by start time
+        sorted_keeps = sorted(edl.keep_segments, key=lambda s: s.start)
+
+        for keep in sorted_keeps:
+            # If there's a gap before this keep segment, add a "remove" segment
+            if keep.start > current_time + 0.001:  # Small tolerance
+                segments.append(
+                    TimelineSegment(
+                        start=current_time,
+                        end=keep.start,
+                        action="remove",
+                        reason="AI suggested removal",
+                        original_action="remove",
+                    )
+                )
+
+            # Add the keep segment
+            segments.append(
+                TimelineSegment(
+                    start=keep.start,
+                    end=keep.end,
+                    action="keep",
+                    reason=keep.reason,
+                    original_action="keep",
+                )
+            )
+            current_time = keep.end
+
+        # If there's remaining time after the last keep segment
+        if current_time < edl.original_duration - 0.001:
+            segments.append(
+                TimelineSegment(
+                    start=current_time,
+                    end=edl.original_duration,
+                    action="remove",
+                    reason="AI suggested removal (end section)",
+                    original_action="remove",
+                )
+            )
+
+        return InteractiveEDL(
+            segments=segments, original_duration=edl.original_duration
+        )
