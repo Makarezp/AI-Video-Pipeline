@@ -50,40 +50,56 @@ console_handler.setLevel(logging.INFO)
 logger.addHandler(console_handler)
 
 
-HYBRID_PROMPT = """You are a video editor cleaning up a talking head video.
+HYBRID_PROMPT = """You are an expert video editor. Your goal is to create a seamless, natural-sounding talking head video.
 
 I'm giving you:
-1. The VIDEO itself - watch it to see facial expressions, hesitations, visual cues
-2. A TRANSCRIPT with exact word timestamps from Whisper
 
-Your job: Analyze the ENTIRE video and mark EVERY segment as either KEEP or REMOVE.
+    The VIDEO itself - watch for visual context.
 
-MARK AS keep=false (REMOVE):
-- Filler sounds: "um", "uh", "eee", "hmm", stutters
-- False starts: When they start, stop, restart a sentence  
-- Repeated phrases: Same thing said twice (keep the better version)
-- Long pauses: Awkward silence, thinking gaps
-- Self-corrections: keep only the correction
-- When the speaker looks confused, lost, or frustrated
-- Moments where they clearly made a mistake
-- Throat clearing, coughs, nervous laughter
+    A TRANSCRIPT with exact timestamps.
 
-MARK AS keep=true (KEEP): Everything else. Good content stays. This is a CLEANUP task, not compression.
+Your job: Analyze the ENTIRE video and mark segments as KEEP or REMOVE.
+
+CORE PHILOSOPHY: PREFER KEEPING OVER CUTTING.
+Visual jump cuts are jarring. Only remove a segment if it clearly damages the quality of the video. If you are unsure, MARK AS KEEP.
+
+CRITERIA FOR REMOVAL (keep=false):
+
+    Audio Glitches: Loud throat clearing, heavy coughing, or mic bumps.
+
+    True Stumbles: "Um", "uh", or stuttering only if it interrupts the flow of speech. (Ignore quiet "ums" that blend in).
+
+    False Starts: When the speaker stops a sentence mid-way and restarts it entirely (e.g., "I went to the... I decided to go to the store").
+
+    Dead Air: Silence lasting > 2.0 seconds where nothing is happening visually.
+
+    Breaking Character: Clearly talking to the camera crew, asking for a line, or checking a phone.
+
+CRITERIA FOR KEEPING (keep=true):
+
+    Thinking Pauses: Moments where the speaker is silent but looking thoughtful. DO NOT CUT THESE.
+
+    Natural Breaths: Taking a breath between sentences is natural. Keep it.
+
+    Emphatic Repetition: If they repeat a word for effect (e.g., "It was a long, long day"), KEEP IT.
+
+    Personality: Small chuckles, smiles, or slight hesitations that make the speaker feel human.
 
 CRITICAL RULES:
-- Return ALL segments covering the ENTIRE video duration (no gaps!)
-- Use ONLY timestamps from the transcript below
-- Your start/end times MUST exactly match transcript timestamps
-- Every segment needs a "reason" field
-- For keep=false segments, reason MUST explain WHY it should be removed
+
+    Return ALL segments covering the ENTIRE video duration (Start time 0 to End of video). NO GAPS.
+
+    Use ONLY timestamps from the transcript below.
+
+    Your start/end times MUST exactly match transcript timestamps.
 
 OUTPUT FORMAT (JSON only):
 {
-  "segments": [
-    {"start": <start_time>, "end": <end_time>, "keep": true, "reason": "good content"},
-    {"start": <start_time>, "end": <end_time>, "keep": false, "reason": "filler word 'um'"},
-    ...
-  ]
+"segments": [
+{"start": <start_time>, "end": <end_time>, "keep": true, "reason": "Intro content, natural flow"},
+{"start": <start_time>, "end": <end_time>, "keep": false, "reason": "False start: Speaker restarts sentence"},
+...
+]
 }
 
 === TRANSCRIPT WITH TIMESTAMPS ===
