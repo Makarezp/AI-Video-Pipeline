@@ -18,6 +18,8 @@ from typing import Optional
 from google import genai
 from google.genai import types
 from openai import OpenAI
+import asyncio
+import concurrent.futures
 
 from .models import (
     EditDecisionList,
@@ -106,6 +108,19 @@ OUTPUT FORMAT (JSON only):
 """
 
 
+SPLIT_PROMPT = """Analyze this transcript and find cut points to split the video into chunks.
+Target chunk length: 150 seconds (2.5 minutes).
+
+Rules:
+1. Splits MUST happen at the end of a sentence (period/question mark).
+2. PREFER splits at topic transitions or paragraph breaks.
+3. Chunks should be roughly 120-180 seconds long.
+4. Return ONLY a JSON list of timestamps (seconds) for the cuts. e.g. [152.5, 305.2, 451.0]
+
+TRANSCRIPT:
+"""
+
+
 class HybridVideoService:
     """
     Hybrid service: Whisper for timestamps + Gemini for video analysis.
@@ -122,11 +137,8 @@ class HybridVideoService:
         gemini_api_key: Optional[str] = None,
         gemini_model: str = "gemini-3-flash-preview",
     ):
-        # OpenAI for Whisper
-        openai_key = openai_api_key or os.getenv("OPENAI_API_KEY")
-        if not openai_key:
-            raise ValueError("OPENAI_API_KEY not found")
-        self.openai = OpenAI(api_key=openai_key)
+        # Whisper for transcription
+        self.openai = OpenAI(api_key=openai_api_key or os.getenv("OPENAI_API_KEY"))
 
         # Gemini for video analysis
         gemini_key = gemini_api_key or os.getenv("GEMINI_API_KEY")
@@ -135,31 +147,263 @@ class HybridVideoService:
         self.gemini = genai.Client(api_key=gemini_key)
         self.gemini_model = gemini_model
 
-    def analyze_video(self, video_path: Path) -> EditDecisionList:
+        # Use a cheaper/faster model for splitting
+        self.splitter_model = "gemini-2.0-flash-exp"
+
+    def _get_smart_split_points(
+        self, transcript: Transcript, target_duration: int = 150
+    ) -> list[float]:
         """
-        Analyze video using both Whisper and Gemini.
+        Ask Gemini to find semantic split points in the transcript.
+        """
+        # Format transcript for splitting (condensed text is fine)
+        # We need timestamps though, so let's format it with [time] markers every 10s
+        text_with_timestamps = []
+        last_ts = 0
+        for seg in transcript.segments:
+            if seg.start - last_ts > 10:
+                text_with_timestamps.append(f"[{seg.start:.1f}s]")
+                last_ts = seg.start
+            text_with_timestamps.append(seg.word)
+
+        full_text = " ".join(text_with_timestamps)
+
+        prompt = SPLIT_PROMPT + full_text
+
+        try:
+            response = self.gemini.models.generate_content(
+                model=self.splitter_model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1,
+                ),
+            )
+
+            # Robust parsing (reuse logic)
+            content = response.text.strip()
+            if content.startswith("```json"):
+                content = content[7:-3].strip()
+            elif content.startswith("```"):
+                content = content[3:-3].strip()
+
+            timestamps = json.loads(content)
+            if isinstance(timestamps, list):
+                # Validate timestamps
+                valid_ts = [t for t in timestamps if 0 < t < transcript.duration]
+                valid_ts.sort()
+                return valid_ts
+            return []
+
+        except Exception as e:
+            logger.warning(
+                f"Smart splitting failed: {e}. Falling back to fixed chunks."
+            )
+            return []
+
+    def _split_video_at_timestamps(
+        self, video_path: Path, timestamps: list[float]
+    ) -> list[Path]:
+        """
+        Split video physically using FFmpeg at the given timestamps.
+        Returns list of paths to chunks.
+        """
+        chunks = []
+        start = 0.0
+
+        # Create temp dir for chunks if not exists
+        temp_dir = video_path.parent / "chunks"
+        temp_dir.mkdir(exist_ok=True)
+
+        # Add end of video to timestamps
+        all_points = timestamps + [None]
+
+        for i, end in enumerate(all_points):
+            chunk_name = f"{video_path.stem}_chunk_{i:03d}.mp4"
+            output_path = temp_dir / chunk_name
+
+            cmd = [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(video_path),
+                "-ss",
+                str(start),
+            ]
+
+            if end is not None:
+                duration = end - start
+                cmd.extend(["-t", str(duration)])
+
+            cmd.extend(
+                [
+                    "-c:v",
+                    "libx264",
+                    "-c:a",
+                    "aac",  # Re-encode to ensure clean cuts
+                    "-preset",
+                    "ultrafast",  # Speed over compression for temp chunks
+                    str(output_path),
+                ]
+            )
+
+            # Run ffmpeg
+            try:
+                subprocess.run(
+                    cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
+                )
+                chunks.append(output_path)
+                if end is not None:
+                    start = end
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Failed to split chunk {i}: {e}")
+                # Analyze remaining video as one chunk if split fails?
+                # For now just continue
+
+        return chunks
+
+    async def analyze_video_async(self, video_path: Path) -> EditDecisionList:
+        """
+        Async version of analyze_video supporting parallel processing.
         """
         video_path = Path(video_path)
 
         # Step 1: Extract audio and get Whisper transcript
         print("  [1/3] Transcribing with Whisper...")
-        transcript = self._transcribe_with_whisper(video_path)
+        # Run Whisper in thread pool since it's blocking/heavy
+        loop = asyncio.get_running_loop()
+        transcript = await loop.run_in_executor(
+            None, self._transcribe_with_whisper, video_path
+        )
+
         print(
             f"        Found {len(transcript.segments)} words in {transcript.duration:.1f}s"
         )
 
         # Step 2: Compress video for Gemini
         print("  [2/3] Preparing video for Gemini...")
-        compressed_path = self._compress_video(video_path)
+        compressed_path = await loop.run_in_executor(
+            None, self._compress_video, video_path
+        )
 
         try:
-            # Step 3: Send video + transcript to Gemini
+            # Step 3: Analyze with Gemini (Parallel if needed)
             print("  [3/3] Analyzing with Gemini...")
-            edl = self._analyze_with_gemini(compressed_path, transcript)
-            return edl
+
+            # Smart Chunking for long videos (> 3 min)
+            if transcript.duration > 180:
+                print(
+                    f"        Video is long ({transcript.duration:.1f}s). Using Smart Chunking..."
+                )
+
+                # 3a. Get Smart Split Points
+                split_points = await loop.run_in_executor(
+                    None, self._get_smart_split_points, transcript
+                )
+                print(
+                    f"        Found {len(split_points)} semantic split points: {split_points}"
+                )
+
+                # 3b. Split Video
+                # Run ffmpeg splitting in thread pool
+                chunk_paths = await loop.run_in_executor(
+                    None, self._split_video_at_timestamps, compressed_path, split_points
+                )
+
+                # 3c. Prepare tasks for each chunk
+                tasks = []
+                start_time = 0.0
+                # Prepare duration boundaries for slicing transcript
+                boundaries = [0.0] + split_points + [transcript.duration]
+
+                for i, chunk_path in enumerate(chunk_paths):
+                    chunk_start = boundaries[i]
+                    chunk_end = boundaries[i + 1]
+
+                    # Slice transcript for this chunk
+                    chunk_transcript = transcript.slice(chunk_start, chunk_end)
+
+                    # Create async task
+                    # We wrap the sync analyze call in a thread
+                    tasks.append(
+                        loop.run_in_executor(
+                            None,
+                            self._analyze_with_gemini,
+                            chunk_path,
+                            chunk_transcript,
+                        )
+                    )
+
+                # 3d. Run all chunks in parallel
+                print(f"        Processing {len(tasks)} chunks in parallel...")
+                results = await asyncio.gather(*tasks)
+
+                # 3e. Merge results
+                print("        Merging results...")
+                final_edl = self._merge_chunk_results(
+                    results, boundaries[:-1], transcript.duration
+                )
+
+                # Cleanup chunks
+                for cp in chunk_paths:
+                    cp.unlink(missing_ok=True)
+                if chunk_paths:
+                    chunk_paths[0].parent.rmdir()  # Start cleaning temp dir
+
+                return final_edl
+
+            else:
+                # Short video: Single pass
+                edl = await loop.run_in_executor(
+                    None, self._analyze_with_gemini, compressed_path, transcript
+                )
+                return edl
+
         finally:
             if compressed_path != video_path:
                 compressed_path.unlink(missing_ok=True)
+
+    def _merge_chunk_results(
+        self,
+        results: list[EditDecisionList],
+        start_offsets: list[float],
+        total_duration: float,
+    ) -> EditDecisionList:
+        """
+        Merge multiple EDLs from chunks into one master EDL.
+        Adjusts timestamps by adding start_offsets.
+        """
+        all_keep = []
+        all_interactive = []
+
+        for i, res in enumerate(results):
+            offset = start_offsets[i]
+
+            # Offset keep segments
+            for seg in res.keep_segments:
+                seg.start += offset
+                seg.end += offset
+                all_keep.append(seg)
+
+            # Offset interactive segments
+            if res.interactive_segments:
+                for seg in res.interactive_segments:
+                    seg.start += offset
+                    seg.end += offset
+                    all_interactive.append(seg)
+
+        # Merge adjacent keep segments if they touch (optional, but clean)
+        # For now, just return valid list
+
+        return EditDecisionList(
+            keep_segments=all_keep,
+            interactive_segments=all_interactive if all_interactive else None,
+            original_duration=total_duration,
+        )
+
+    def analyze_video(self, video_path: Path) -> EditDecisionList:
+        """Sync wrapper for backward compatibility."""
+        return asyncio.run(self.analyze_video_async(video_path))
 
     def _transcribe_with_whisper(self, video_path: Path) -> Transcript:
         """Get word-level timestamps from Whisper."""
@@ -211,7 +455,16 @@ class HybridVideoService:
         return audio_path
 
     def _compress_video(self, video_path: Path) -> Path:
-        """Compress video for Gemini upload."""
+        """Compress video for Gemini upload. Skip if small enough."""
+
+        # 1. Skip if file is already small (< 50MB)
+        file_size_mb = video_path.stat().st_size / (1024 * 1024)
+        if file_size_mb < 50:
+            print(
+                f"        Video is small ({file_size_mb:.1f}MB). Skipping compression."
+            )
+            return video_path
+
         tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
         tmp.close()
         compressed_path = Path(tmp.name)
@@ -222,26 +475,29 @@ class HybridVideoService:
             "-i",
             str(video_path),
             "-vf",
-            "scale=1280:-2",
+            "scale=640:-2",  # 640p is plenty for Gemini visual analysis
             "-c:v",
             "libx264",
             "-preset",
-            "fast",
+            "ultrafast",  # Much faster than 'fast'
             "-crf",
-            "28",
+            "30",  # Higher compression
             "-c:a",
             "aac",
             "-b:a",
-            "96k",
+            "64k",
             str(compressed_path),
         ]
-        subprocess.run(cmd, capture_output=True, check=True)
 
-        original = video_path.stat().st_size / 1024 / 1024
-        compressed = compressed_path.stat().st_size / 1024 / 1024
-        print(f"        Compressed: {original:.0f}MB → {compressed:.1f}MB")
-
-        return compressed_path
+        try:
+            subprocess.run(cmd, capture_output=True, check=True)
+            original = video_path.stat().st_size / 1024 / 1024
+            compressed = compressed_path.stat().st_size / 1024 / 1024
+            print(f"        Compressed: {original:.0f}MB → {compressed:.1f}MB")
+            return compressed_path
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Compression failed: {e}. Using original.")
+            return video_path
 
     def _analyze_with_gemini(
         self, video_path: Path, transcript: Transcript

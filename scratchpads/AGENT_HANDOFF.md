@@ -35,14 +35,12 @@ We have pivoted to a **Hybrid Multimodal Engine**:
 - [x] Gemini 3 integration with `gemini-3-flash-preview`
 - [x] Whisper word-level timestamps
 - [x] Temporal padding (+50ms/-150ms) and overlap merging
-- [x] **Refined Prompt**: "Prefer Keeping" philosophy + 2s silence threshold
-- [x] **Robust JSON Parsing**: Handles "Extra data" errors from Gemini
 - [x] Debug logging to `logs/` directory
 
 ### API Layer
 - [x] `POST /upload` - Accept video files
 - [x] `POST /analyze/{filename}` - Run full Whisper + Gemini pipeline
-- [x] `GET /timeline/{edl}` - Load pre-existing EDL as interactive timeline (with specific remove reasons)
+- [x] `GET /timeline/{edl}` - Load pre-existing EDL as interactive timeline
 - [x] `POST /render` - Render edited video from user overrides
 - [x] `GET /video/{filename}` - Stream video files to browser
 
@@ -50,7 +48,6 @@ We have pivoted to a **Hybrid Multimodal Engine**:
 - [x] Drag-and-drop video upload
 - [x] Analysis progress indicator
 - [x] Interactive timeline with keep/remove segment visualization
-- [x] **Rich Feedback**: Hover segments to see specific AI reasons (e.g., "long pause", "stumble")
 - [x] Segment toggle (click to override AI decisions)
 - [x] Playhead indicator showing current video position
 - [x] Render button with output video player

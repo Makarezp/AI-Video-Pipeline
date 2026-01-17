@@ -38,6 +38,30 @@ class Transcript(BaseModel):
     full_text: str
     duration: float = Field(ge=0, description="Total duration in seconds")
 
+    def slice(self, start: float, end: float) -> "Transcript":
+        """
+        Create a new Transcript containing only words within [start, end].
+        Timestamps are adjusted relative to 'start'.
+        """
+        # Filter segments that overlap with the window
+        new_segments = []
+        for seg in self.segments:
+            # We include a word if its midpoint falls within the range
+            midpoint = (seg.start + seg.end) / 2
+            if start <= midpoint < end:
+                # Create copy with offset timestamps
+                new_seg = seg.model_copy()
+                new_seg.start = max(0.0, seg.start - start)
+                new_seg.end = max(0.0, seg.end - start)
+                new_segments.append(new_seg)
+
+        # Reconstruct full text from kept segments
+        new_text = " ".join([s.word for s in new_segments])
+
+        return Transcript(
+            segments=new_segments, full_text=new_text, duration=end - start
+        )
+
 
 # =============================================================================
 # EDITORIAL MODELS

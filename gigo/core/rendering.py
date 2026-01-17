@@ -189,15 +189,13 @@ class FFmpegRenderingService:
             "-filter_complex_script",
             str(filter_file),
             "-map",
-            output_labels[0],
+            output_labels[0],  # Mapping [outv] restored
             "-map",
-            output_labels[1],
+            output_labels[1],  # Mapping [outa]
             "-c:v",
-            "libx264",
-            "-preset",
-            "fast",
-            "-crf",
-            "23",
+            "h264_videotoolbox",  # Apple Silicon Hardware Encoder
+            "-q:v",
+            "60",  # Quality scale 1-100 (60 is roughly equivalent to CRF 23)
             "-c:a",
             "aac",
             "-b:a",

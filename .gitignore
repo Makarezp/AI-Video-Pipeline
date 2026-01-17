@@ -24,3 +24,8 @@ build/
 .idea/
 .vscode/
 *.swp
+
+# Project Logs
+logs/
+gemini_response_*.txt
+*.log
