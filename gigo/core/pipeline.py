@@ -8,8 +8,7 @@ from pathlib import Path
 from dataclasses import dataclass
 
 from .models import Transcript, EditDecisionList
-from .transcription import OpenAITranscriptionService
-from .editorial import OpenAIEditorialService
+from .hybrid import HybridVideoService
 
 
 @dataclass
@@ -40,18 +39,16 @@ Segments kept: {len(self.edl.keep_segments)}
 
 class VideoPipeline:
     """
-    Main pipeline that orchestrates transcription and editorial services.
-
-    Services are injected, allowing easy swapping of implementations.
+    Main pipeline that orchestrates multimodal analysis.
+    Uses HybridVideoService (Whisper + Gemini 3) for the best results.
     """
 
-    def __init__(self, transcription_service=None, editorial_service=None):
-        self.transcription = transcription_service or OpenAITranscriptionService()
-        self.editorial = editorial_service or OpenAIEditorialService()
+    def __init__(self, service=None):
+        self.service = service or HybridVideoService()
 
     def process(self, video_path: "str | Path") -> ProcessingResult:
         """
-        Process a video through the full pipeline.
+        Process a video through the hybrid multimodal pipeline.
 
         Args:
             video_path: Path to the video file
@@ -64,19 +61,16 @@ class VideoPipeline:
         if not video_path.exists():
             raise FileNotFoundError(f"Video not found: {video_path}")
 
-        # Step 1: Transcribe
-        print(f"[1/2] Transcribing {video_path.name}...")
-        transcript = self.transcription.transcribe(video_path)
-        print(
-            f"      Found {len(transcript.segments)} words in {transcript.duration:.1f}s"
-        )
+        # In HybridVideoService, word-level transcription and
+        # multimodal analysis happen inside analyze_video
+        edl = self.service.analyze_video(video_path)
 
-        # Step 2: Analyze and create EDL
-        print("[2/2] Analyzing transcript with LLM...")
-        edl = self.editorial.analyze(transcript)
-        print(
-            f"      Keeping {len(edl.keep_segments)} segments ({edl.compression_ratio:.1%} of original)"
-        )
+        # We need the transcript for the ProcessingResult
+        # Re-running transcription is a bit wasteful, but the pipeline
+        # is becoming a legacy wrapper around HybridVideoService anyway.
+        # For now, we'll extract the transcript from the service's internal method
+        # and focus on getting the EDL.
+        transcript = self.service._transcribe_with_whisper(video_path)
 
         return ProcessingResult(transcript=transcript, edl=edl)
 
