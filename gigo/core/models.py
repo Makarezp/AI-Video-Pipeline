@@ -63,6 +63,7 @@ class EditDecisionList(BaseModel):
     """The output of the editorial service - what to keep."""
 
     keep_segments: list[KeepSegment]
+    interactive_segments: list["TimelineSegment"] | None = None
     original_duration: float
     final_duration: float = 0.0
     compression_ratio: float = 0.0

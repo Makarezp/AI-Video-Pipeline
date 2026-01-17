@@ -1,0 +1,104 @@
+Video: /var/folders/lk/mmnv5xq50tv5rmxvqhbwm5b80000gn/T/tmpuw1l9ji2.mp4
+Duration: 60.0s
+Words: 112
+============================================================
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 0.78,
+      "keep": false,
+      "reason": "initial silence and preparation"
+    },
+    {
+      "start": 0.78,
+      "end": 9.6,
+      "keep": true,
+      "reason": "good content: introduction and context about Capricorn's empire"
+    },
+    {
+      "start": 9.6,
+      "end": 10.28,
+      "keep": false,
+      "reason": "thinking pause before continuing"
+    },
+    {
+      "start": 10.28,
+      "end": 13.92,
+      "keep": true,
+      "reason": "good content: introduction of Aquarius the Reformer"
+    },
+    {
+      "start": 13.92,
+      "end": 14.14,
+      "keep": false,
+      "reason": "brief silence/gap"
+    },
+    {
+      "start": 14.14,
+      "end": 21.98,
+      "keep": true,
+      "reason": "good content: description of Aquarius's role in changing the system"
+    },
+    {
+      "start": 21.98,
+      "end": 22.32,
+      "keep": false,
+      "reason": "brief pause"
+    },
+    {
+      "start": 22.32,
+      "end": 26.14,
+      "keep": true,
+      "reason": "good content: self-correction and refinement of the previous statement"
+    },
+    {
+      "start": 26.14,
+      "end": 27.12,
+      "keep": false,
+      "reason": "thinking pause before expanding on the idea"
+    },
+    {
+      "start": 27.12,
+      "end": 37.3,
+      "keep": true,
+      "reason": "good content: discussing the specific ways Aquarius modifies the system"
+    },
+    {
+      "start": 37.3,
+      "end": 37.74,
+      "keep": false,
+      "reason": "thinking gap"
+    },
+    {
+      "start": 37.74,
+      "end": 45.08,
+      "keep": true,
+      "reason": "good content: explaining the core essence of Aquarius changing society"
+    },
+    {
+      "start": 45.08,
+      "end": 45.92,
+      "keep": false,
+      "reason": "thinking pause"
+    },
+    {
+      "start": 45.92,
+      "end": 54.24,
+      "keep": true,
+      "reason": "good content: comparing Aquarius to Capricorn and Sagittarius"
+    },
+    {
+      "start": 54.24,
+      "end": 54.74,
+      "keep": false,
+      "reason": "brief pause"
+    },
+    {
+      "start": 54.74,
+      "end": 60.0,
+      "keep": true,
+      "reason": "good content: defining Aquarius as a fixed air sign"
+    }
+  ]
+}

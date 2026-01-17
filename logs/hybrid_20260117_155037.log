@@ -1,0 +1,213 @@
+16:05:07 | DEBUG | ============================================================
+16:05:07 | DEBUG | RAW GEMINI RESPONSE:
+16:05:07 | DEBUG | {
+  "segments": [
+    {
+      "start": 0,
+      "end": 1.12,
+      "keep": false,
+      "reason": "Initial silence and setup before starting the talking head session."
+    },
+    {
+      "start": 1.12,
+      "end": 10.72,
+      "keep": true,
+      "reason": "Introductory content about the roots of Aries Moon and Mars tension."
+    },
+    {
+      "start": 10.72,
+      "end": 11.22,
+      "keep": false,
+      "reason": "Brief pause or hesitation between sentences."
+    },
+    {
+      "start": 11.22,
+      "end": 15.92,
+      "keep": true,
+      "reason": "Good content explaining how to use Aries Moon information negatively if tension is present."
+    },
+    {
+      "start": 15.92,
+      "end": 16.36,
+      "keep": false,
+      "reason": "Short thinking gap."
+    },
+    {
+      "start": 16.36,
+      "end": 18.08,
+      "keep": true,
+      "reason": "Information regarding harmonious aspects from Mars."
+    },
+    {
+      "start": 18.08,
+      "end": 19.4,
+      "keep": false,
+      "reason": "Long silence where the speaker appears confused or distracted."
+    },
+    {
+      "start": 19.4,
+      "end": 20.54,
+      "keep": true,
+      "reason": "Continuation of advice regarding Mars aspects."
+    },
+    {
+      "start": 20.54,
+      "end": 20.9,
+      "keep": false,
+      "reason": "Small hesitation before transitioning."
+    },
+    {
+      "start": 20.9,
+      "end": 23.68,
+      "keep": true,
+      "reason": "Explanation of the 'perks' or benefits of an Aries Moon sign."
+    },
+    {
+      "start": 23.68,
+      "end": 24.14,
+      "keep": false,
+      "reason": "Natural pause in speech."
+    },
+    {
+      "start": 24.14,
+      "end": 24.86,
+      "keep": true,
+      "reason": "Brief filler that serves as an transition marker."
+    },
+    {
+      "start": 24.86,
+      "end": 24.96,
+      "keep": false,
+      "reason": "Micro-pause."
+    },
+    {
+      "start": 24.96,
+      "end": 29.84,
+      "keep": true,
+      "reason": "Defining what Aries Moon emotions consist of."...
+16:05:07 | DEBUG | ============================================================
+16:05:07 | INFO |         Saved raw response to gemini_response_160507.txt
+16:05:07 | ERROR | JSON Parsing Error: Expecting property name enclosed in double quotes: line 315 column 6 (char 6919)
+16:15:00 | DEBUG | ============================================================
+16:15:00 | DEBUG | RAW GEMINI RESPONSE:
+16:15:00 | DEBUG | {
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 0.78,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 0.78,
+      "end": 3.74,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 3.74,
+      "end": 3.9,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 3.9,
+      "end": 7.58,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 7.58,
+      "end": 8.32,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 8.32,
+      "end": 9.6,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 9.6,
+      "end": 10.28,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 10.28,
+      "end": 13.92,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 13.92,
+      "end": 14.54,
+      "keep": false,
+      "reason": "false start 'тот'"
+    },
+    {
+      "start": 14.54,
+      "end": 16.46,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 16.46,
+      "end": 16.7,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 16.7,
+      "end": 21.98,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 21.98,
+      "end": 27.12,
+      "keep": false,
+      "reason": "self-correction where the speaker backtracks on their previous statement"
+    },
+    {
+      "start": 27.12,
+      "end": 28.0,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 28.0,
+      "end": 28.26,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 28.26,
+      "end": 29.1,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 29.1,
+      "end": 29.5,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 29.5,
+      "end": 35.36,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 35.36,
+      "end": 35.62,
+      "keep":...
+16:15:00 | DEBUG | ============================================================
+16:15:00 | INFO |         Saved raw response to gemini_response_161500.txt
+16:15:00 | DEBUG | Parsed JSON successfully. Type: <class 'dict'>
+16:15:00 | DEBUG | Keys: dict_keys(['segments'])
+16:15:00 | DEBUG | Found 'segments' key with 34 items
+16:15:00 | INFO |         Total segments: 34 (keep: 17, remove: 17)
+16:15:00 | INFO |         Keep segments from Gemini: 17

@@ -8,53 +8,72 @@ Transform rambling, unscripted "talking head" videos into tight, viral content b
 ---
 
 ## 🛠️ Current Architecture: The "Gold Standard"
-We have pivoted to a **Hybrid Multimodal Engine**. 
-1. **Whisper**: Extracts exact word timestamps.
-2. **Gemini 3 Flash Preview**: "Watches" the video and "reads" the transcript to decide what to keep.
+We have pivoted to a **Hybrid Multimodal Engine**:
+
+1. **Whisper**: Extracts exact word timestamps from audio.
+2. **Gemini 3 Flash Preview**: "Watches" the video + "reads" the transcript to decide what to keep.
 3. **FFmpeg**: Slices the video with surgical precision.
-4. **Temporal Padding**: Every cut has a **+50ms lead-in** and **+150ms decay** to prevent audio clipping.
-5. **Human-in-the-Loop UI**: Web-based timeline editor for reviewing and overriding AI decisions.
+4. **Temporal Padding**: Every cut has **+50ms lead-in** and **+150ms decay** to prevent audio clipping.
+5. **Human-in-the-Loop UI**: Full-featured web editor with upload, analysis, review, render, and playback.
 
 ---
 
-## 📍 Where to Navigate First
-To understand the logic and state of the project, read these files in order:
+## 📍 Key Files
 
-1.  **[Strategy Blueprint](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/scratchpads/garbageingoldout.md)**: The "North Star" of the product.
-2.  **[Mobile Feedback Proposal](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/scratchpads/mobile_feedback_proposal.md)**: The HITL architecture design.
-3.  **[Core Engine (hybrid.py)](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/core/hybrid.py)**: Whisper + Gemini 3 logic + `get_interactive_timeline()`.
-4.  **[API Layer (api.py)](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/api.py)**: FastAPI endpoints for timeline and rendering.
-5.  **[UI (ui/)](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/ui/)**: Vanilla JS web app for interactive editing.
+| File | Purpose |
+|------|---------|
+| [hybrid.py](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/core/hybrid.py) | Core Whisper + Gemini analysis engine |
+| [api.py](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/api.py) | FastAPI endpoints: `/upload`, `/analyze`, `/render`, `/timeline` |
+| [ui/](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/ui/) | Vanilla JS web app |
+| [logs/](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/logs/) | Debug logs from Gemini responses |
 
 ---
 
 ## ✅ What's Done
-- [x] **Gemini 3 Integration**: Service is live and using `gemini-3-flash-preview`.
-- [x] **Word Clipping Fix**: Temporal padding and overlap merging are implemented.
-- [x] **Core Cleanup**: All legacy/single-modality services deleted. Engine consolidated.
-- [x] **Verification**: Verified with `IMG_1836_1min.MOV` (94.5% content retention).
-- [x] **InteractiveEDL Model**: `TimelineSegment` and `InteractiveEDL` in `models.py`.
-- [x] **get_interactive_timeline()**: Converts keep-only EDL → gapless timeline with keep/remove segments.
-- [x] **FastAPI Server**: `/videos`, `/video/{filename}`, `/timeline/{edl}`, `/render` endpoints.
-- [x] **PoC Web UI**: Timeline visualization with segment toggle (keep ↔ remove).
+
+### Core Engine
+- [x] Gemini 3 integration with `gemini-3-flash-preview`
+- [x] Whisper word-level timestamps
+- [x] Temporal padding (+50ms/-150ms) and overlap merging
+- [x] Debug logging to `logs/` directory
+
+### API Layer
+- [x] `POST /upload` - Accept video files
+- [x] `POST /analyze/{filename}` - Run full Whisper + Gemini pipeline
+- [x] `GET /timeline/{edl}` - Load pre-existing EDL as interactive timeline
+- [x] `POST /render` - Render edited video from user overrides
+- [x] `GET /video/{filename}` - Stream video files to browser
+
+### Web UI
+- [x] Drag-and-drop video upload
+- [x] Analysis progress indicator
+- [x] Interactive timeline with keep/remove segment visualization
+- [x] Segment toggle (click to override AI decisions)
+- [x] Playhead indicator showing current video position
+- [x] Render button with output video player
+- [x] Download rendered video
 
 ---
 
 ## 🚀 Your Next Objective
-The HITL PoC is functional! Next steps to consider:
+The full upload → analyze → edit → render → view flow is working! Consider:
 
-1. **Browser Testing**: Video playback in browser requires `.mp4` (MOV files may not play in all browsers). Consider transcoding test videos.
-2. **Error Handling**: Add better error states in the UI.
-3. **Segment Scrubbing**: Click timeline to seek video to that segment.
+1. **Click-to-seek**: Click on timeline to jump video to that position
+2. **Segment splitting**: Allow user to split a segment into two
+3. **Undo/redo**: Track edit history
+4. **Batch processing**: Queue multiple videos
 
+---
 
-### To Run the PoC
+## 🏃 Quick Start
 ```bash
-cd /Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My\ Drive/Projects/GarbageInGoldOut
+cd "/Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My Drive/Projects/GarbageInGoldOut"
 source .venv/bin/activate
 uvicorn gigo.api:app --reload --port 8000  # API server
-python3 -m http.server 5173 --directory ui  # UI server
+cd ui && python3 -m http.server 5173       # UI server
 # Open http://localhost:5173
 ```
+
+**Environment**: Requires `OPENAI_API_KEY` and `GEMINI_API_KEY` in `.env`
 
 **Ready when you are.**

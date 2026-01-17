@@ -1,0 +1,221 @@
+Video: /var/folders/lk/mmnv5xq50tv5rmxvqhbwm5b80000gn/T/tmp52yup88c.mp4
+Duration: 971.47998046875s
+Words: 2183
+============================================================
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 1.12,
+      "keep": false,
+      "reason": "intro silence/noise"
+    },
+    {
+      "start": 1.12,
+      "end": 102.12,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 102.12,
+      "end": 108.3,
+      "keep": false,
+      "reason": "trailing words and long pause"
+    },
+    {
+      "start": 108.3,
+      "end": 160.56,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 160.56,
+      "end": 163.86,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 163.86,
+      "end": 170.64,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 170.64,
+      "end": 171.22,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 171.22,
+      "end": 237.3,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 237.3,
+      "end": 238.6,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 238.6,
+      "end": 272.56,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 272.56,
+      "end": 273.84,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 273.84,
+      "end": 421.2,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 421.2,
+      "end": 423.92,
+      "keep": false,
+      "reason": "self-correction and stuttering"
+    },
+    {
+      "start": 423.92,
+      "end": 489.14,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 489.14,
+      "end": 492.84,
+      "keep": false,
+      "reason": "long pause and filler"
+    },
+    {
+      "start": 492.84,
+      "end": 494.06,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 494.06,
+      "end": 499.78,
+      "keep": false,
+      "reason": "long pause and redundant repetition"
+    },
+    {
+      "start": 499.78,
+      "end": 531.66,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 531.66,
+      "end": 532.86,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 532.86,
+      "end": 535.3,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 535.3,
+      "end": 536.68,
+      "keep": false,
+      "reason": "brain fart/mistake"
+    },
+    {
+      "start": 536.68,
+      "end": 587.2,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 587.2,
+      "end": 589.48,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 589.48,
+      "end": 617.32,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 617.32,
+      "end": 618.68,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 618.68,
+      "end": 694.84,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 694.84,
+      "end": 695.6,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 695.6,
+      "end": 748.98,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 748.98,
+      "end": 750.96,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 750.96,
+      "end": 755.78,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 755.78,
+      "end": 756.4,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 756.4,
+      "end": 804.1,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 804.1,
+      "end": 805.16,
+      "keep": false,
+      "reason": "long pause/thinking gap"
+    },
+    {
+      "start": 805.16,
+      "end": 965.48,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 965.48,
+      "end": 971.48,
+      "keep": false,
+      "reason": "outtake and trailing silence"
+    }
+  ]
+}
+
+]
+}

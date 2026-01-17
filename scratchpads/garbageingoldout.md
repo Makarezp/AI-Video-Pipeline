@@ -41,33 +41,40 @@ We have pivoted from a simple text-only editor to a **Multimodal Hybrid Engine**
 
 ---
 
-## 2. The Data Flow (Surgical Efficiency)
+## 2. The Data Flow (Surgical Efficiency + Review)
 
 1. **Upload**: User sends raw video.
 2. **Extraction**: Extract audio for Whisper.
-3. **Compression**: Create a lightweight "Preview Video" (CRF 28) for the Gemini 3 vision model to process quickly.
+3. **Compression**: Create a lightweight "Preview Video" (CRF 28) for the Gemini 3 vision model.
 4. **Synthesis**:
    - Whisper → Word Timestamps.
-   - Gemini 3 + Preview Video + Transcript → Keep Decisions.
-5. **Padding & Merging**: Apply temporal buffers and resolve segment overlaps.
-6. **Rendering**: FFmpeg slices the high-quality source and concatenates with crossfades.
+   - Gemini 3 + Preview Video + Transcript → Initial Edit Decisions.
+5. **The Review Phase (NEW | Human-in-the-Loop)**:
+   - The app displays an **Interactive Timeline**.
+   - **Green Zones**: Segments to keep.
+   - **Red Zones**: Segments the AI suggests removing (with visible reasons like "Stutter" or "Silent Gap").
+   - **User Override**: The user can "Flip" any segment between keep/remove.
+6. **Padding & Merging**: Apply temporal buffers (50ms/150ms) to the *final* user-approved selection.
+7. **Rendering**: FFmpeg slices the high-quality source and concatenates.
 
 ---
 
 ## 3. The "Secret Sauce" (Meaning-Based Editing)
 
-Most apps edit based on "silence." We edit based on **Intent**.
+Most apps edit based on "silence." We edit based on **Intent** and **User Feedback**.
 
 - **The Semantic Cleanup**: If a creator says "The product... actually... the final result is gold," the engine realizes "The final result is gold" is the intended thought and deletes the hesitation.
-- **The Visual Cleanup**: If the creator looks at their notes in the middle of a sentence, Gemini 3 sees the eye movement and cuts that segment, even if the audio was silent.
+- **The Visual Cleanup**: If the creator looks at their notes, Gemini 3 sees the eye movement and cuts that segment.
+- **The Intelligence Hook**: Every time a user overrides a "Remove" decision, we log it. This allows the system to learn your individual speaking style and become a "Personal Editor" over time.
 
 ---
 
 ## 4. Technical Strategy
 
+- **Interactive EDL**: A gapless data structure representing every millisecond of the original video as either "Keep" or "Remove".
 - **Gemini 3**: Chosen for its massive context window and native multimodal native understanding.
-- **FFmpeg**: Chosen over high-level libraries (like MoviePy) for speed and surgical precision in a production environment.
-- **JSON Structured Output**: Using Gemini 3's native JSON mode to ensure the "Brain" always speaks a language the "Hands" (FFmpeg) understand.
+- **FFmpeg**: Surgical precision at scale.
+- **JSON Structured Output**: Ensures we always have valid segments for the UI to draw.
 
 ---
 *Garbage in, viral gold out.*

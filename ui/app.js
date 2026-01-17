@@ -30,6 +30,7 @@ const videoList = document.getElementById("videoList");
 const editor = document.getElementById("editor");
 const videoPlayer = document.getElementById("videoPlayer");
 const timelineEl = document.getElementById("timeline");
+const playhead = document.getElementById("playhead");
 const segmentInfo = document.getElementById("segmentInfo");
 const currentTimeEl = document.getElementById("currentTime");
 const totalTimeEl = document.getElementById("totalTime");
@@ -75,10 +76,19 @@ function setupEventListeners() {
     // Video player
     videoPlayer.addEventListener("timeupdate", () => {
         currentTimeEl.textContent = formatTime(videoPlayer.currentTime);
+        updatePlayhead();
     });
     videoPlayer.addEventListener("loadedmetadata", () => {
         totalTimeEl.textContent = formatTime(videoPlayer.duration);
     });
+}
+
+function updatePlayhead() {
+    if (!state.timeline || !videoPlayer.duration) return;
+
+    const progress = videoPlayer.currentTime / state.timeline.original_duration;
+    const percentage = Math.min(progress * 100, 100);
+    playhead.style.left = `${percentage}%`;
 }
 
 // ============================================

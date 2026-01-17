@@ -1,0 +1,212 @@
+Video: /var/folders/lk/mmnv5xq50tv5rmxvqhbwm5b80000gn/T/tmp33q47za6.mp4
+Duration: 60.0s
+Words: 112
+============================================================
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 0.78,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 0.78,
+      "end": 3.74,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 3.74,
+      "end": 3.9,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 3.9,
+      "end": 7.58,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 7.58,
+      "end": 8.32,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 8.32,
+      "end": 9.6,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 9.6,
+      "end": 10.28,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 10.28,
+      "end": 13.92,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 13.92,
+      "end": 14.54,
+      "keep": false,
+      "reason": "false start 'тот'"
+    },
+    {
+      "start": 14.54,
+      "end": 16.46,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 16.46,
+      "end": 16.7,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 16.7,
+      "end": 21.98,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 21.98,
+      "end": 27.12,
+      "keep": false,
+      "reason": "self-correction where the speaker backtracks on their previous statement"
+    },
+    {
+      "start": 27.12,
+      "end": 28.0,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 28.0,
+      "end": 28.26,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 28.26,
+      "end": 29.1,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 29.1,
+      "end": 29.5,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 29.5,
+      "end": 35.36,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 35.36,
+      "end": 35.62,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 35.62,
+      "end": 36.42,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 36.42,
+      "end": 36.68,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 36.68,
+      "end": 37.3,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 37.3,
+      "end": 37.74,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 37.74,
+      "end": 43.08,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 43.08,
+      "end": 43.16,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 43.16,
+      "end": 44.1,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 44.1,
+      "end": 44.22,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 44.22,
+      "end": 45.08,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 45.08,
+      "end": 45.92,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 45.92,
+      "end": 54.24,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 54.24,
+      "end": 54.74,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 54.74,
+      "end": 55.9,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 55.9,
+      "end": 56.28,
+      "keep": false,
+      "reason": "silence"
+    },
+    {
+      "start": 56.28,
+      "end": 60.0,
+      "keep": true,
+      "reason": "good content"
+    }
+  ]
+}

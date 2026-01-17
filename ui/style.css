@@ -244,6 +244,10 @@ body {
     background: var(--color-remove);
 }
 
+.timeline-wrapper {
+    position: relative;
+}
+
 .timeline {
     height: 60px;
     background: var(--color-bg-elevated);
@@ -251,6 +255,31 @@ body {
     display: flex;
     overflow: hidden;
     cursor: pointer;
+}
+
+.playhead {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 60px;
+    background: var(--color-text);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+    z-index: 20;
+    transition: left 0.05s linear;
+}
+
+.playhead::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: -5px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--color-text);
 }
 
 .timeline-segment {

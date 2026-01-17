@@ -1,0 +1,302 @@
+15:30:07 | DEBUG | ============================================================
+15:30:07 | DEBUG | RAW GEMINI RESPONSE:
+15:30:07 | DEBUG | {
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 0.78,
+      "keep": false,
+      "reason": "silence and preparation"
+    },
+    {
+      "start": 0.78,
+      "end": 26.14,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 26.14,
+      "end": 27.12,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 27.12,
+      "end": 45.08,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 45.08,
+      "end": 45.92,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 45.92,
+      "end": 60.0,
+      "keep": true,
+      "reason": "good content"
+    }
+  ]
+}
+15:30:07 | DEBUG | ============================================================
+15:30:07 | INFO |         Saved raw response to gemini_response_153007.txt
+15:30:07 | DEBUG | Parsed JSON successfully. Type: <class 'dict'>
+15:30:07 | DEBUG | Keys: dict_keys(['segments'])
+15:30:07 | DEBUG | Found 'segments' key with 6 items
+15:30:07 | INFO |         Total segments: 6 (keep: 3, remove: 3)
+15:30:07 | INFO |         Keep segments from Gemini: 3
+15:35:58 | DEBUG | ============================================================
+15:35:58 | DEBUG | RAW GEMINI RESPONSE:
+15:35:58 | DEBUG | [
+  {
+    "start": 0.0,
+    "end": 0.9,
+    "keep": true,
+    "reason": "good content"
+  },
+  {
+    "start": 0.9,
+    "end": 1.16,
+    "keep": false,
+    "reason": "long pause"
+  },
+  {
+    "start": 1.16,
+    "end": 5.94,
+    "keep": true,
+    "reason": "good content"
+  },
+  {
+    "start": 5.94,
+    "end": 6.34,
+    "keep": false,
+    "reason": "long pause"
+  },
+  {
+    "start": 6.34,
+    "end": 9.64,
+    "keep": true,
+    "reason": "good content"
+  },
+  {
+    "start": 9.64,
+    "end": 10.12,
+    "keep": false,
+    "reason": "long pause"
+  },
+  {
+    "start": 10.12,
+    "end": 14.84,
+    "keep": true,
+    "reason": "good content"
+  },
+  {
+    "start": 14.84,
+    "end": 15.3,
+    "keep": false,
+    "reason": "long pause"
+  },
+  {
+    "start": 15.3,
+    "end": 17.0,
+    "keep": true,
+    "reason": "good content"
+  },
+  {
+    "start": 17.0,
+    "end": 17.34,
+    "keep": false,
+    "reason": "long pause"
+  },
+  {
+    "start": 17.34,
+    "end": 18.36,
+    "keep": true,
+    "reason": "good content"
+  },
+  {
+    "start": 18.36,
+    "end": 18.72,
+    "keep": false,
+    "reason": "long pause"
+  },
+  {
+    "start": 18.72,
+    "end": 21.48,
+    "keep": true,
+    "reason": "good content"
+  },
+  {
+    "start": 21.48,
+    "end": 22.02,
+    "keep": false,
+    "reason": "long pause"
+  },
+  {
+    "start": 22.02,
+    "end": 27.66,
+    "keep": true,
+    "reason": "good content"
+  },
+  {
+    "start": 27.66,
+    "end": 28.1,
+    "keep": false,
+    "reason": "long pause"
+  },
+  {
+    "start": 28.1,
+    "end": 29.06,
+    "keep": true,
+    "reason": "good content"
+  },
+  {
+    "start": 29.06,
+    "end": 29.26,
+    "keep": false,
+    "reason": "long pause"
+  },
+  {
+    "start": 29.26,
+    "end": 30.22,
+    "keep": true,
+    "reason": "good content"
+  },
+  {
+    "start": 30.22,
+    "end": 30.5,
+    "keep": false,
+    "reason": "long pause"
+  },
+  {
+    "start": 30.5,
+    "end": 31.44,
+    "keep": true,
+    "reason": "good content"
+  },
+  {
+    "start": 31.44,
+    "end": 31.64,
+    "keep": fa...
+15:35:58 | DEBUG | ============================================================
+15:35:58 | INFO |         Saved raw response to gemini_response_153558.txt
+15:35:58 | DEBUG | Parsed JSON successfully. Type: <class 'list'>
+15:35:58 | DEBUG | Keys: N/A (list)
+15:35:58 | DEBUG | Result is a list with 186 items
+15:35:58 | INFO |         Keep segments from Gemini: 186
+15:49:01 | DEBUG | ============================================================
+15:49:01 | DEBUG | RAW GEMINI RESPONSE:
+15:49:01 | DEBUG | {
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 1.12,
+      "keep": false,
+      "reason": "intro silence/noise"
+    },
+    {
+      "start": 1.12,
+      "end": 102.12,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 102.12,
+      "end": 108.3,
+      "keep": false,
+      "reason": "trailing words and long pause"
+    },
+    {
+      "start": 108.3,
+      "end": 160.56,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 160.56,
+      "end": 163.86,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 163.86,
+      "end": 170.64,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 170.64,
+      "end": 171.22,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 171.22,
+      "end": 237.3,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 237.3,
+      "end": 238.6,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 238.6,
+      "end": 272.56,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 272.56,
+      "end": 273.84,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 273.84,
+      "end": 421.2,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 421.2,
+      "end": 423.92,
+      "keep": false,
+      "reason": "self-correction and stuttering"
+    },
+    {
+      "start": 423.92,
+      "end": 489.14,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 489.14,
+      "end": 492.84,
+      "keep": false,
+      "reason": "long pause and filler"
+    },
+    {
+      "start": 492.84,
+      "end": 494.06,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 494.06,
+      "end": 499.78,
+      "keep": false,
+      "reason": "long pause and redundant repetition"
+    },
+    {
+      "start": 499.78,
+      "end": 531.66,
+      "keep": true,
+      "reason": ...
+15:49:01 | DEBUG | ============================================================
+15:49:01 | INFO |         Saved raw response to gemini_response_154901.txt
+15:49:01 | ERROR | JSON Parsing Error: Extra data: line 216 column 1 (char 3884)

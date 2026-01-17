@@ -1,0 +1,27 @@
+14:56:47 | DEBUG | ============================================================
+14:56:47 | DEBUG | RAW GEMINI RESPONSE:
+14:56:47 | DEBUG | {
+  "keep_segments": [
+    {
+      "start": 0.78,
+      "end": 21.98,
+      "reason": "The speaker introduces the topic and describes Aquarius as a reformer who breaks the existing system to create something new."
+    },
+    {
+      "start": 27.12,
+      "end": 43.08,
+      "reason": "The speaker refines the previous statement, clarifying that the role of Aquarius is to remake and refresh society."
+    },
+    {
+      "start": 46.02,
+      "end": 60.00,
+      "reason": "The speaker provides a more technical description of Aquarius as a fixed air sign, comparing its structure to other zodiac signs."
+    }
+  ]
+}
+14:56:47 | DEBUG | ============================================================
+14:56:47 | INFO |         Saved raw response to gemini_response_145647.txt
+14:56:47 | DEBUG | Parsed JSON successfully. Type: <class 'dict'>
+14:56:47 | DEBUG | Keys: dict_keys(['keep_segments'])
+14:56:47 | DEBUG | Found 'keep_segments' key with 3 items
+14:56:47 | INFO |         Segments from Gemini: 3

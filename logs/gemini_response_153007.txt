@@ -1,0 +1,44 @@
+Video: /var/folders/lk/mmnv5xq50tv5rmxvqhbwm5b80000gn/T/tmpe53ce0t3.mp4
+Duration: 60.0s
+Words: 112
+============================================================
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 0.78,
+      "keep": false,
+      "reason": "silence and preparation"
+    },
+    {
+      "start": 0.78,
+      "end": 26.14,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 26.14,
+      "end": 27.12,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 27.12,
+      "end": 45.08,
+      "keep": true,
+      "reason": "good content"
+    },
+    {
+      "start": 45.08,
+      "end": 45.92,
+      "keep": false,
+      "reason": "long pause"
+    },
+    {
+      "start": 45.92,
+      "end": 60.0,
+      "keep": true,
+      "reason": "good content"
+    }
+  ]
+}

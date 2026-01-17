@@ -56,9 +56,9 @@ I'm giving you:
 1. The VIDEO itself - watch it to see facial expressions, hesitations, visual cues
 2. A TRANSCRIPT with exact word timestamps from Whisper
 
-Your job: Identify which parts to KEEP based on both what you SEE and what you HEAR.
+Your job: Analyze the ENTIRE video and mark EVERY segment as either KEEP or REMOVE.
 
-REMOVE by NOT including in keep_segments:
+MARK AS keep=false (REMOVE):
 - Filler sounds: "um", "uh", "eee", "hmm", stutters
 - False starts: When they start, stop, restart a sentence  
 - Repeated phrases: Same thing said twice (keep the better version)
@@ -68,18 +68,21 @@ REMOVE by NOT including in keep_segments:
 - Moments where they clearly made a mistake
 - Throat clearing, coughs, nervous laughter
 
-KEEP EVERYTHING ELSE. Good content stays. This is a CLEANUP task, not compression.
+MARK AS keep=true (KEEP): Everything else. Good content stays. This is a CLEANUP task, not compression.
 
 CRITICAL RULES:
-- Use ONLY the timestamps from the transcript below
-- Your start/end times MUST exactly match timestamps you see in the transcript
-- Return FEW, LARGE segments covering most of the video
-- DO NOT copy example timestamps - use the ACTUAL transcript times
+- Return ALL segments covering the ENTIRE video duration (no gaps!)
+- Use ONLY timestamps from the transcript below
+- Your start/end times MUST exactly match transcript timestamps
+- Every segment needs a "reason" field
+- For keep=false segments, reason MUST explain WHY it should be removed
 
 OUTPUT FORMAT (JSON only):
 {
-  "keep_segments": [
-    {"start": <first_word_start>, "end": <last_word_end>, "reason": "description"}
+  "segments": [
+    {"start": <start_time>, "end": <end_time>, "keep": true, "reason": "good content"},
+    {"start": <start_time>, "end": <end_time>, "keep": false, "reason": "filler word 'um'"},
+    ...
   ]
 }
 
@@ -320,19 +323,67 @@ class HybridVideoService:
                 f"Keys: {result.keys() if isinstance(result, dict) else 'N/A (list)'}"
             )
         except json.JSONDecodeError as e:
-            logger.error(f"JSON Parsing Error: {e}")
-            print(f"        ❌ JSON Parsing Error: {e}")
-            # Save for debugging
-            with open("failed_response.txt", "w") as f:
-                f.write(content)
-            raise
+            # Handle "Extra data" error which happens when Gemini appends text after JSON
+            if e.msg == "Extra data":
+                logger.warning(
+                    f"JSON Parsing Error: Extra data at pos {e.pos}. Attempting to recover..."
+                )
+                try:
+                    # Slice content up to the error position
+                    result = json.loads(content[: e.pos])
+                    logger.info("Successfully recovered JSON from extra data")
+                except Exception as nested_e:
+                    logger.error(f"Failed to recover JSON: {nested_e}")
+                    raise e
+            else:
+                logger.error(f"JSON Parsing Error: {e}")
+                print(f"        ❌ JSON Parsing Error: {e}")
+                # Save for debugging
+                with open("failed_response.txt", "w") as f:
+                    f.write(content)
+                raise
 
         # --- Padding & Merging Logic ---
         START_PADDING = 0.05  # 50ms before
         END_PADDING = 0.15  # 150ms after
 
-        # Handle both {"keep_segments": [...]} and [...] formats
-        if isinstance(result, dict) and "keep_segments" in result:
+        # Prepare interactive_segments if available
+        interactive_segments_list = []
+
+        # Handle new format {"segments": [...]} or old format {"keep_segments": [...]}
+        if isinstance(result, dict) and "segments" in result:
+            all_segments = result["segments"]
+            logger.debug(f"Found 'segments' key with {len(all_segments)} items")
+
+            # Sort full list by start time for interactive timeline
+            sorted_all = sorted(all_segments, key=lambda s: s.get("start", 0))
+            for seg in sorted_all:
+                try:
+                    s_start = float(seg.get("start", 0))
+                    s_end = float(seg.get("end", 0))
+                    s_keep = seg.get("keep", True)
+                    s_reason = seg.get("reason", "")
+                    s_action = "keep" if s_keep else "remove"
+
+                    interactive_segments_list.append(
+                        TimelineSegment(
+                            start=s_start,
+                            end=s_end,
+                            action=s_action,
+                            reason=s_reason,
+                            original_action=s_action,
+                        )
+                    )
+                except (ValueError, TypeError):
+                    continue
+
+            # Filter for keep=true segments for editing
+            segments_to_process = [s for s in all_segments if s.get("keep", True)]
+            remove_segments = [s for s in all_segments if not s.get("keep", True)]
+            logger.info(
+                f"        Total segments: {len(all_segments)} (keep: {len(segments_to_process)}, remove: {len(remove_segments)})"
+            )
+        elif isinstance(result, dict) and "keep_segments" in result:
             segments_to_process = result["keep_segments"]
             logger.debug(
                 f"Found 'keep_segments' key with {len(segments_to_process)} items"
@@ -345,7 +396,7 @@ class HybridVideoService:
             logger.warning(f"Unexpected result format: {type(result)}")
             logger.debug(f"Result content: {str(result)[:500]}")
 
-        logger.info(f"        Segments from Gemini: {len(segments_to_process)}")
+        logger.info(f"        Keep segments from Gemini: {len(segments_to_process)}")
 
         raw_segments = []
         for seg in segments_to_process:
@@ -362,12 +413,18 @@ class HybridVideoService:
                     raw_segments.append(
                         {"start": padded_start, "end": padded_end, "reason": reason}
                     )
-            except (ValueError, KeyError):
+            except (ValueError, KeyError) as e:
+                logger.warning(f"Failed to parse segment: {seg}, error: {e}")
                 continue
 
         if not raw_segments:
+            logger.warning("No valid keep segments found!")
             return EditDecisionList(
-                keep_segments=[], original_duration=transcript.duration
+                keep_segments=[],
+                interactive_segments=interactive_segments_list
+                if interactive_segments_list
+                else None,
+                original_duration=transcript.duration,
             )
 
         # Sort by start time
@@ -403,7 +460,11 @@ class HybridVideoService:
         )
 
         return EditDecisionList(
-            keep_segments=merged_segments, original_duration=transcript.duration
+            keep_segments=merged_segments,
+            interactive_segments=interactive_segments_list
+            if interactive_segments_list
+            else None,
+            original_duration=transcript.duration,
         )
 
     def _format_transcript(self, transcript: Transcript) -> str:
@@ -417,9 +478,17 @@ class HybridVideoService:
         """
         Convert keep-only EDL to gapless interactive timeline.
 
-        Fills gaps between keep_segments with 'remove' segments,
-        allowing the UI to display every second of the video.
+        If interactive_segments are present (from proper Gemini analysis), use those.
+        Otherwise, fill gaps between keep_segments with generic 'remove' segments.
         """
+        # Best case: We have the full interactive timeline from Gemini
+        if edl.interactive_segments:
+            return InteractiveEDL(
+                segments=edl.interactive_segments,
+                original_duration=edl.original_duration,
+            )
+
+        # Fallback: Reconstruct timeline by filling gaps
         segments: list[TimelineSegment] = []
         current_time = 0.0
 
