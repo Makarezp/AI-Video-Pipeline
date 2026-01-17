@@ -1,0 +1,10 @@
+Analyze this transcript and find cut points to split the video into chunks.
+Target chunk length: 150 seconds (2.5 minutes).
+
+Rules:
+1. Splits MUST happen at the end of a sentence (period/question mark).
+2. PREFER splits at topic transitions or paragraph breaks.
+3. Chunks should be roughly 120-180 seconds long.
+4. Return ONLY a JSON list of timestamps (seconds) for the cuts. e.g. [152.5, 305.2, 451.0]
+
+TRANSCRIPT:

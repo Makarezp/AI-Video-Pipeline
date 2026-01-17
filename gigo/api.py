@@ -22,7 +22,8 @@ from pydantic import BaseModel
 
 from gigo.core.models import EditDecisionList, InteractiveEDL, KeepSegment
 from gigo.core.rendering import FFmpegRenderingService
-from gigo.core.hybrid import HybridVideoService
+from gigo.factory import create_orchestrator
+from gigo.services.timeline import TimelineService
 
 # Load environment variables
 load_dotenv()
@@ -134,13 +135,13 @@ def analyze_video(filename: str):
         raise HTTPException(status_code=404, detail=f"Video not found: {filename}")
 
     try:
-        # Initialize the hybrid service (requires API keys in environment)
-        service = HybridVideoService()
+        # Initialize the orchestrator (requires API keys in environment)
+        orchestrator = create_orchestrator()
 
         print(f"[Analyze] Starting analysis of {filename}...")
 
         # Run full analysis (Whisper + Gemini)
-        edl = service.analyze_video(video_path)
+        edl = orchestrator.process(video_path)
 
         # Save EDL to JSON file
         edl_filename = f"{video_path.stem}.hybrid.edl.json"
@@ -152,7 +153,7 @@ def analyze_video(filename: str):
         print(f"[Analyze] Saved EDL to {edl_filename}")
 
         # Convert to interactive timeline
-        interactive_edl = service.get_interactive_timeline(edl)
+        interactive_edl = orchestrator.get_interactive_timeline(edl)
 
         return {
             "success": True,
@@ -232,11 +233,9 @@ def get_timeline(edl_filename: str):
             original_duration=edl_data["original_duration"],
         )
 
-        # Convert to interactive timeline
-        # Create a minimal hybrid service just for the conversion
-        # (We don't need API keys for this operation)
-        service = object.__new__(HybridVideoService)
-        interactive_edl = service.get_interactive_timeline(edl)
+        # Convert to interactive timeline using TimelineService
+        timeline_service = TimelineService()
+        interactive_edl = timeline_service.get_interactive_timeline(edl)
 
         # Also find the corresponding video file
         video_stem = edl_filename.split(".")[0]  # e.g., "IMG_1836_1min"
