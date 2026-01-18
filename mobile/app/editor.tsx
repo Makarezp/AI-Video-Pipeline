@@ -1,3 +1,13 @@
+/**
+ * Editor Screen - CapCut-style video editor with multi-track timeline
+ * 
+ * Features:
+ * - Full-screen video preview
+ * - Multi-track timeline (video + audio waveform)
+ * - Context-aware bottom toolbar
+ * - Gradient render button
+ */
+
 import { useState, useRef, useCallback } from 'react';
 import { StyleSheet, View, TouchableOpacity, Text, Alert, Dimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -5,8 +15,10 @@ import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
+import { LinearGradient } from 'expo-linear-gradient';
 import Timeline from '../components/Timeline';
 import { TimelineSegment, Timeline as TimelineType, getVideoUrl, renderVideo, getDownloadUrl } from '../utils/api';
+import { colors, gradients, typography, spacing, radii, shadows } from '../utils/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -33,7 +45,7 @@ export default function EditorScreen() {
     const [isRendering, setIsRendering] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Get video filename from path
+    // Get video URL
     const videoFilename = params.videoPath?.split('/').pop() || '';
     const videoUrl = getVideoUrl(videoFilename);
 
@@ -71,14 +83,12 @@ export default function EditorScreen() {
     const saveToGallery = async (outputPath: string) => {
         setIsSaving(true);
         try {
-            // Request permissions
             const { status } = await MediaLibrary.requestPermissionsAsync();
             if (status !== 'granted') {
                 Alert.alert('Permission Required', 'Please allow access to save videos to your gallery.');
                 return false;
             }
 
-            // Download the video from the server
             const downloadUrl = getDownloadUrl(outputPath);
             const filename = outputPath.split('/').pop() || 'edited_video.mp4';
             const localUri = `${FileSystem.cacheDirectory}${filename}`;
@@ -89,7 +99,6 @@ export default function EditorScreen() {
                 throw new Error('Failed to download video');
             }
 
-            // Save to gallery
             const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
             await MediaLibrary.createAlbumAsync('GIGO', asset, false);
 
@@ -146,12 +155,40 @@ export default function EditorScreen() {
         }
     };
 
-    // Count segments
+    // Segment counts
     const keepCount = timeline.segments.filter(s => s.action === 'keep').length;
     const removeCount = timeline.segments.filter(s => s.action === 'remove').length;
 
+
+
     return (
-        <SafeAreaView style={styles.container} edges={['bottom']}>
+        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity
+                    style={styles.headerButton}
+                    onPress={() => router.back()}
+                >
+                    <Text style={styles.headerButtonText}>✕</Text>
+                </TouchableOpacity>
+
+                <View style={styles.headerStats}>
+                    <View style={styles.statBadge}>
+                        <Text style={styles.statBadgeText}>✓ {keepCount}</Text>
+                    </View>
+                    <View style={[styles.statBadge, styles.statBadgeDanger]}>
+                        <Text style={styles.statBadgeText}>✕ {removeCount}</Text>
+                    </View>
+                </View>
+
+                <TouchableOpacity
+                    style={styles.headerButton}
+                    onPress={() => Alert.alert('Settings', 'Editor settings coming soon.')}
+                >
+                    <Text style={styles.headerButtonText}>⚙️</Text>
+                </TouchableOpacity>
+            </View>
+
             {/* Video Player */}
             <View style={styles.videoContainer}>
                 <Video
@@ -187,33 +224,26 @@ export default function EditorScreen() {
                 onToggleSegment={handleToggleSegment}
             />
 
-            {/* Stats */}
-            <View style={styles.statsRow}>
-                <View style={styles.stat}>
-                    <Text style={styles.statValue}>{keepCount}</Text>
-                    <Text style={styles.statLabel}>Keep</Text>
-                </View>
-                <View style={styles.stat}>
-                    <Text style={[styles.statValue, { color: '#ef4444' }]}>{removeCount}</Text>
-                    <Text style={styles.statLabel}>Remove</Text>
-                </View>
-            </View>
 
-            {/* Legend */}
-            <View style={styles.legend}>
-                <Text style={styles.legendText}>💡 Tap a segment to toggle keep/remove</Text>
-            </View>
 
             {/* Render Button */}
             <View style={styles.footer}>
                 <TouchableOpacity
-                    style={[styles.renderButton, (isRendering || isSaving) && styles.renderButtonDisabled]}
+                    style={styles.renderButton}
                     onPress={handleRender}
                     disabled={isRendering || isSaving}
+                    activeOpacity={0.9}
                 >
-                    <Text style={styles.renderButtonText}>
-                        {isRendering ? '⏳ Rendering...' : isSaving ? '💾 Saving...' : '🎬 Render Video'}
-                    </Text>
+                    <LinearGradient
+                        colors={isRendering || isSaving ? [colors.bgTertiary, colors.bgTertiary] : gradients.gold}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.renderButtonGradient}
+                    >
+                        <Text style={styles.renderButtonText}>
+                            {isRendering ? '⏳ Rendering...' : isSaving ? '💾 Saving...' : '🎬 Export Video'}
+                        </Text>
+                    </LinearGradient>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
@@ -223,11 +253,47 @@ export default function EditorScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0a0a0a',
+        backgroundColor: colors.bgPrimary,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: spacing.base,
+        paddingVertical: spacing.sm,
+    },
+    headerButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: colors.bgSecondary,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    headerButtonText: {
+        fontSize: 18,
+    },
+    headerStats: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+    },
+    statBadge: {
+        backgroundColor: colors.success,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs,
+        borderRadius: radii.pill,
+    },
+    statBadgeDanger: {
+        backgroundColor: colors.danger,
+    },
+    statBadgeText: {
+        color: colors.textPrimary,
+        fontSize: typography.fontSize.sm,
+        fontWeight: typography.fontWeight.semibold,
     },
     videoContainer: {
         width: SCREEN_WIDTH,
-        height: SCREEN_WIDTH * (9 / 16), // 16:9 aspect ratio
+        height: SCREEN_WIDTH * (9 / 16),
         backgroundColor: '#000',
         position: 'relative',
     },
@@ -246,55 +312,31 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.6)',
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
     },
     playIcon: {
-        color: '#fff',
+        color: colors.textPrimary,
         fontSize: 32,
-        marginLeft: 6, // Visual centering for play icon
-    },
-    statsRow: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 48,
-        paddingVertical: 16,
-    },
-    stat: {
-        alignItems: 'center',
-    },
-    statValue: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#22c55e',
-    },
-    statLabel: {
-        fontSize: 14,
-        color: '#888',
-        marginTop: 4,
-    },
-    legend: {
-        alignItems: 'center',
-        paddingVertical: 8,
-    },
-    legendText: {
-        color: '#666',
-        fontSize: 14,
+        marginLeft: 6,
     },
     footer: {
-        padding: 16,
-        marginTop: 'auto',
+        padding: spacing.base,
+        paddingBottom: spacing.sm,
     },
     renderButton: {
-        backgroundColor: '#FFD700',
-        paddingVertical: 18,
-        borderRadius: 16,
-        alignItems: 'center',
+        borderRadius: radii.xl,
+        overflow: 'hidden',
+        ...shadows.lg,
     },
-    renderButtonDisabled: {
-        backgroundColor: '#666',
+    renderButtonGradient: {
+        paddingVertical: spacing.lg,
+        alignItems: 'center',
+        borderRadius: radii.xl,
     },
     renderButtonText: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#000',
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.bgPrimary,
     },
 });

@@ -1,6 +1,28 @@
-import React from 'react';
-import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
+/**
+ * Timeline - Thumbnail card-based segment navigation
+ * 
+ * Features:
+ * - Horizontal scrollable segment cards with thumbnail placeholders
+ * - Text overlaid on thumbnail with gradient overlay
+ * - Tap to navigate, long-press to toggle
+ */
+
+import React, { useRef, useEffect } from 'react';
+import {
+    StyleSheet,
+    View,
+    TouchableOpacity,
+    Text,
+    ScrollView,
+    Dimensions,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { TimelineSegment } from '../utils/api';
+import { colors, typography, spacing, radii } from '../utils/theme';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = 180;
+const CARD_HEIGHT = 130;
 
 interface TimelineProps {
     segments: TimelineSegment[];
@@ -17,113 +39,231 @@ export default function Timeline({
     onSeek,
     onToggleSegment,
 }: TimelineProps) {
-    const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+    const scrollViewRef = useRef<ScrollView>(null);
 
-    const handlePress = (event: any) => {
-        const { locationX } = event.nativeEvent;
-        // Approximate scale based on screen width padding
-        const trackWidth = 300;
-        const percent = locationX / trackWidth;
-        const time = percent * duration;
-        onSeek(Math.max(0, Math.min(duration, time)));
+    // Find current segment index
+    const currentSegmentIndex = segments.findIndex(
+        seg => currentTime >= seg.start && currentTime < seg.end
+    );
+
+    // Auto-scroll to current segment
+    useEffect(() => {
+        if (currentSegmentIndex >= 0 && scrollViewRef.current) {
+            const scrollX = currentSegmentIndex * (CARD_WIDTH + spacing.sm) - SCREEN_WIDTH / 2 + CARD_WIDTH / 2;
+            scrollViewRef.current.scrollTo({ x: Math.max(0, scrollX), animated: true });
+        }
+    }, [currentSegmentIndex]);
+
+    const formatDuration = (start: number, end: number): string => {
+        const secs = Math.round(end - start);
+        if (secs < 60) return `${secs}s`;
+        const mins = Math.floor(secs / 60);
+        const remainingSecs = secs % 60;
+        return `${mins}:${remainingSecs.toString().padStart(2, '0')}`;
     };
+
+    const getReasonLabel = (reason: string): string => {
+        return reason || 'Segment';
+    };
+
+    // Count stats
+    const keepCount = segments.filter(s => s.action === 'keep').length;
+    const removeCount = segments.filter(s => s.action === 'remove').length;
 
     return (
         <View style={styles.container}>
-            {/* Time display */}
-            <View style={styles.timeRow}>
-                <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
-                <Text style={styles.timeText}>{formatTime(duration)}</Text>
+            {/* Header with counts */}
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Segments</Text>
+                <View style={styles.statsRow}>
+                    <View style={styles.statBadge}>
+                        <View style={[styles.statDot, { backgroundColor: colors.success }]} />
+                        <Text style={styles.statText}>{keepCount}</Text>
+                    </View>
+                    <View style={styles.statBadge}>
+                        <View style={[styles.statDot, { backgroundColor: colors.danger }]} />
+                        <Text style={styles.statText}>{removeCount}</Text>
+                    </View>
+                </View>
             </View>
 
-            {/* Segments track */}
-            <View style={styles.track}>
+            {/* Segment cards */}
+            <ScrollView
+                ref={scrollViewRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+                decelerationRate="fast"
+            >
                 {segments.map((segment, index) => {
-                    const left = (segment.start / duration) * 100;
-                    const width = ((segment.end - segment.start) / duration) * 100;
+                    const isKeep = segment.action === 'keep';
+                    const isCurrent = index === currentSegmentIndex;
+                    const segmentDuration = formatDuration(segment.start, segment.end);
 
                     return (
                         <TouchableOpacity
                             key={index}
                             style={[
-                                styles.segment,
-                                {
-                                    left: `${left}%`,
-                                    width: `${width}%`,
-                                    backgroundColor: segment.action === 'keep' ? '#22c55e' : '#ef4444',
-                                },
+                                styles.card,
+                                { borderColor: isKeep ? colors.success : colors.danger },
+                                isCurrent && styles.cardCurrent,
                             ]}
-                            onPress={() => onToggleSegment(index)}
-                            activeOpacity={0.7}
-                        />
+                            onPress={() => onSeek(segment.start)}
+                            onLongPress={() => onToggleSegment(index)}
+                            activeOpacity={0.8}
+                            delayLongPress={300}
+                        >
+                            {/* Thumbnail placeholder */}
+                            <View style={[
+                                styles.thumbnailPlaceholder,
+                                { backgroundColor: isKeep ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)' }
+                            ]}>
+                                {/* Future: Image component for actual thumbnail */}
+                            </View>
+
+                            {/* Text overlay with gradient */}
+                            <LinearGradient
+                                colors={['transparent', 'rgba(0,0,0,0.85)']}
+                                style={styles.overlay}
+                            >
+                                <View style={styles.overlayContent}>
+                                    <Text style={styles.reasonText}>
+                                        {getReasonLabel(segment.reason)}
+                                    </Text>
+                                    <View style={styles.bottomRow}>
+                                        <Text style={styles.durationText}>{segmentDuration}</Text>
+                                        <Text style={[
+                                            styles.actionIcon,
+                                            { color: isKeep ? colors.success : colors.danger }
+                                        ]}>
+                                            {isKeep ? '✓' : '✕'}
+                                        </Text>
+                                    </View>
+                                </View>
+                            </LinearGradient>
+
+                            {/* Current indicator */}
+                            {isCurrent && (
+                                <View style={styles.currentBadge}>
+                                    <Text style={styles.currentText}>▶</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
                     );
                 })}
+            </ScrollView>
 
-                {/* Playhead */}
-                <View
-                    style={[
-                        styles.playhead,
-                        { left: `${progressPercent}%` },
-                    ]}
-                />
-            </View>
-
-            {/* Seek bar (invisible touch area) */}
-            <TouchableOpacity
-                style={styles.seekArea}
-                onPress={handlePress}
-                activeOpacity={1}
-            />
+            {/* Hint */}
+            <Text style={styles.hint}>
+                Tap to preview • Hold to toggle
+            </Text>
         </View>
     );
 }
 
-function formatTime(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
 const styles = StyleSheet.create({
     container: {
-        padding: 16,
-        backgroundColor: '#1a1a1a',
-        borderRadius: 12,
-        margin: 16,
+        backgroundColor: colors.bgSecondary,
+        borderRadius: radii.lg,
+        marginHorizontal: spacing.base,
+        marginVertical: spacing.sm,
+        paddingVertical: spacing.sm,
     },
-    timeRow: {
+    header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 8,
+        alignItems: 'center',
+        paddingHorizontal: spacing.base,
+        marginBottom: spacing.sm,
     },
-    timeText: {
-        color: '#888',
-        fontSize: 14,
-        fontFamily: 'monospace',
+    headerTitle: {
+        fontSize: typography.fontSize.md,
+        fontWeight: typography.fontWeight.semibold,
+        color: colors.textPrimary,
     },
-    track: {
-        height: 48,
-        backgroundColor: '#333',
-        borderRadius: 8,
-        position: 'relative',
+    statsRow: {
+        flexDirection: 'row',
+        gap: spacing.md,
+    },
+    statBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    statDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+    },
+    statText: {
+        fontSize: typography.fontSize.sm,
+        color: colors.textSecondary,
+    },
+    scrollContent: {
+        paddingHorizontal: spacing.base,
+        gap: spacing.sm,
+    },
+    card: {
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
+        borderRadius: radii.md,
         overflow: 'hidden',
+        borderWidth: 2,
     },
-    segment: {
+    cardCurrent: {
+        borderColor: colors.accentPrimary,
+        borderWidth: 3,
+    },
+    thumbnailPlaceholder: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'flex-end',
+    },
+    overlayContent: {
+        padding: spacing.xs,
+    },
+    reasonText: {
+        fontSize: 12,
+        color: colors.textPrimary,
+        fontWeight: typography.fontWeight.medium,
+        lineHeight: 15,
+    },
+    bottomRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 2,
+    },
+    durationText: {
+        fontSize: 11,
+        color: colors.textSecondary,
+        fontFamily: typography.fontFamily.mono,
+    },
+    actionIcon: {
+        fontSize: 12,
+        fontWeight: typography.fontWeight.bold,
+    },
+    currentBadge: {
         position: 'absolute',
         top: 4,
-        bottom: 4,
-        borderRadius: 4,
+        left: 4,
+        backgroundColor: colors.accentPrimary,
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    playhead: {
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        width: 3,
-        backgroundColor: '#fff',
-        marginLeft: -1.5,
-        zIndex: 10,
+    currentText: {
+        fontSize: 8,
+        color: colors.bgPrimary,
     },
-    seekArea: {
-        ...StyleSheet.absoluteFillObject,
+    hint: {
+        textAlign: 'center',
+        fontSize: 10,
+        color: colors.textMuted,
+        marginTop: spacing.sm,
     },
 });

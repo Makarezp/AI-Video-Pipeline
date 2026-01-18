@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { colors, typography } from '../utils/theme';
 
 export default function RootLayout() {
     return (
@@ -8,22 +9,24 @@ export default function RootLayout() {
             <Stack
                 screenOptions={{
                     headerStyle: {
-                        backgroundColor: '#1a1a1a',
+                        backgroundColor: colors.bgSecondary,
                     },
-                    headerTintColor: '#fff',
+                    headerTintColor: colors.textPrimary,
                     headerTitleStyle: {
-                        fontWeight: 'bold',
+                        fontWeight: typography.fontWeight.bold,
                     },
                     contentStyle: {
-                        backgroundColor: '#0a0a0a',
+                        backgroundColor: colors.bgPrimary,
                     },
+                    // Modern header appearance
+                    headerShadowVisible: false,
                 }}
             >
                 <Stack.Screen
                     name="index"
                     options={{
                         title: 'GIGO',
-                        headerLargeTitle: true,
+                        headerShown: false, // Custom header in redesign
                     }}
                 />
                 <Stack.Screen
@@ -31,12 +34,14 @@ export default function RootLayout() {
                     options={{
                         title: 'Processing',
                         presentation: 'modal',
+                        headerShown: false, // Custom UI in redesign
                     }}
                 />
                 <Stack.Screen
                     name="editor"
                     options={{
-                        title: 'Edit Timeline',
+                        title: 'Edit',
+                        headerShown: false, // Full-screen editor
                     }}
                 />
             </Stack>

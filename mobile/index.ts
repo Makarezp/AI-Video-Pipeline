@@ -1,8 +1,9 @@
-import { registerRootComponent } from 'expo';
+/**
+ * Entry point for the GIGO mobile app
+ * 
+ * Using expo-router for file-based routing.
+ * The main entry is set in package.json: "main": "expo-router/entry"
+ */
 
-import App from './App';
+import 'expo-router/entry';
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
-registerRootComponent(App);
