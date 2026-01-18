@@ -69,19 +69,18 @@ mobile/
 - [x] **Services**: Transcription, Analysis, Timeline (305 lines)
 - [x] **Orchestrator**: Thin coordinator (80 lines vs 810 original)
 - [x] **DI Factory**: Wires all dependencies
-- [x] **Externalized Prompts**: `prompts/analysis.txt`, `prompts/chunking.txt`
-- [x] **Centralized Config**: All settings in `config.py`
 
 ### Core Features
 - [x] Smart Chunking (semantic splits)
 - [x] Parallel Analysis (async)
 - [x] Hardware-Accelerated Rendering (`h264_videotoolbox`)
+- [x] **Gemini Stability**: Safety settings (`BLOCK_NONE`) & robust MIME detection
 
 ### Mobile App (Expo SDK 52)
 - [x] **Home Screen**: Pick video from library or record new
 - [x] **Upload Screen**: Progress bar for upload + AI analysis
-- [x] **Editor Screen**: Video player with custom timeline
-- [x] **Timeline Component**: Tap segments to toggle keep/remove
+- [x] **Editor Screen**: Professional scrubber timeline (Fixed Playhead)
+- [x] **Timeline Component**: 60fps Reanimated interactions with proportional scaling
 - [x] **Save to Gallery**: Download rendered video to device Photos (GIGO album)
 
 ---

@@ -15,7 +15,7 @@ load_dotenv()
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from gigo.core.hybrid import HybridVideoService
+from gigo.factory import create_orchestrator
 
 
 def main():
@@ -29,12 +29,12 @@ def main():
         print(f"Error: File not found: {video_path}")
         sys.exit(1)
 
-    print(f"\n🎬 Hybrid Analysis: {video_path.name}")
+    print(f"\n🎬 GIGO Analysis: {video_path.name}")
     print("=" * 50)
 
     try:
-        service = HybridVideoService()
-        edl = service.analyze_video(video_path)
+        orchestrator = create_orchestrator()
+        edl = orchestrator.process(video_path)
 
         print(f"\n✅ Analysis complete!")
         print(f"   Original: {edl.original_duration:.1f}s")

@@ -46,14 +46,6 @@ edl = orchestrator.process("raw_video.mp4")
 timeline = orchestrator.get_interactive_timeline(edl)
 ```
 
-### Legacy API (still works)
-```python
-from gigo.core.hybrid import HybridVideoService
-
-service = HybridVideoService()
-edl = service.analyze_video("raw_video.mp4")
-```
-
 ## 🏃 Quick Start
 
 ```bash
@@ -68,7 +60,7 @@ cd ui && python3 -m http.server 5173
 Then open http://localhost:5173
 
 ## 🧪 Testing
-- `test_hybrid.py` - Full analysis demo
+- `test_hybrid.py` - Full analysis pipeline demo (uses Orchestrator)
 - `test_render.py` - Final video rendering
 
 ---
