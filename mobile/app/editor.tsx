@@ -212,24 +212,7 @@ export default function EditorScreen() {
     const keepCount = timeline.segments.filter(s => s.action === 'keep').length;
     const removeCount = timeline.segments.filter(s => s.action === 'remove').length;
 
-    if (isLoading) {
-        return (
-            <SafeAreaView style={[styles.container, styles.centerContent]}>
-                <View style={styles.loadingCard}>
-                    <Text style={styles.loadingEmoji}>🤖</Text>
-                    <Text style={styles.loadingText}>Analyzing Video...</Text>
-                    <Text style={styles.loadingSubtext}>Gemini is watching your content</Text>
-                    <Text style={styles.loadingSubtextSmall}>This may take a minute</Text>
-                </View>
-                <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => router.back()}
-                >
-                    <Text style={styles.closeIcon}>✕</Text>
-                </TouchableOpacity>
-            </SafeAreaView>
-        );
-    }
+
 
 
 
@@ -245,12 +228,20 @@ export default function EditorScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.headerStats}>
-                    <View style={styles.statBadge}>
-                        <Text style={styles.statBadgeText}>✓ {keepCount}</Text>
-                    </View>
-                    <View style={[styles.statBadge, styles.statBadgeDanger]}>
-                        <Text style={styles.statBadgeText}>✕ {removeCount}</Text>
-                    </View>
+                    {isLoading ? (
+                        <View style={[styles.statBadge, { backgroundColor: colors.bgTertiary }]}>
+                            <Text style={styles.statBadgeText}>🤖 Analyzing...</Text>
+                        </View>
+                    ) : (
+                        <>
+                            <View style={styles.statBadge}>
+                                <Text style={styles.statBadgeText}>✓ {keepCount}</Text>
+                            </View>
+                            <View style={[styles.statBadge, styles.statBadgeDanger]}>
+                                <Text style={styles.statBadgeText}>✕ {removeCount}</Text>
+                            </View>
+                        </>
+                    )}
                 </View>
 
                 <TouchableOpacity
@@ -303,17 +294,17 @@ export default function EditorScreen() {
                 <TouchableOpacity
                     style={styles.renderButton}
                     onPress={handleRender}
-                    disabled={isRendering || isSaving}
+                    disabled={isRendering || isSaving || isLoading}
                     activeOpacity={0.9}
                 >
                     <LinearGradient
-                        colors={isRendering || isSaving ? [colors.bgTertiary, colors.bgTertiary] : gradients.gold}
+                        colors={isRendering || isSaving || isLoading ? [colors.bgTertiary, colors.bgTertiary] : gradients.gold}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.renderButtonGradient}
                     >
                         <Text style={styles.renderButtonText}>
-                            {isRendering ? '⏳ Rendering...' : isSaving ? '💾 Saving...' : '🎬 Export Video'}
+                            {isLoading ? '🤖 Analyzing Video...' : isRendering ? '⏳ Rendering...' : isSaving ? '💾 Saving...' : '🎬 Export Video'}
                         </Text>
                     </LinearGradient>
                 </TouchableOpacity>
@@ -411,34 +402,7 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.bold,
         color: colors.bgPrimary,
     },
-    // Loading State Styles
-    centerContent: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    loadingCard: {
-        alignItems: 'center',
-        padding: spacing.xl,
-    },
-    loadingEmoji: {
-        fontSize: 64,
-        marginBottom: spacing.lg,
-    },
-    loadingText: {
-        fontSize: typography.fontSize['2xl'],
-        fontWeight: typography.fontWeight.bold,
-        color: colors.textPrimary,
-        marginBottom: spacing.sm,
-    },
-    loadingSubtext: {
-        fontSize: typography.fontSize.base,
-        color: colors.textSecondary,
-        marginBottom: spacing.xs,
-    },
-    loadingSubtextSmall: {
-        fontSize: typography.fontSize.sm,
-        color: colors.textMuted,
-    },
+
     closeButton: {
         position: 'absolute',
         top: 60,
