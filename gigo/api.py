@@ -28,6 +28,7 @@ from gigo.core.models import (
     InteractiveEDL,
     KeepSegment,
     ProjectMetadata,
+    Transcript,
 )
 from gigo.core.rendering import FFmpegRenderingService
 from gigo.core.storage import FileSystemProjectRepository
@@ -93,10 +94,17 @@ def run_project_analysis(project_id: str):
 
         # Run analysis
         source_path = Path(project.source_video_path)
-        edl = orchestrator.process(source_path, project.user_instructions)
+        edl, transcript = orchestrator.process(source_path, project.user_instructions)
 
         # Save EDL
         repository.save_edl(project.id, edl)
+
+        # Save Transcript
+        transcript_path = (
+            Path(project.source_video_path).parent / f"{project_id}.transcript.json"
+        )
+        with open(transcript_path, "w") as f:
+            f.write(transcript.model_dump_json())
 
         # Update status
         repository.update_status(project.id, "ready")
@@ -186,7 +194,7 @@ def analyze_video(filename: str):
         print(f"[Analyze] Starting analysis of {filename}...")
 
         # Run full analysis (Whisper + Gemini)
-        edl = orchestrator.process(video_path)
+        edl, transcript = orchestrator.process(video_path)
 
         # Save EDL to JSON file
         edl_filename = f"{video_path.stem}.hybrid.edl.json"
@@ -197,6 +205,12 @@ def analyze_video(filename: str):
 
         print(f"[Analyze] Saved EDL to {edl_filename}")
 
+        # Save Transcript
+        transcript_filename = f"{video_path.stem}.transcript.json"
+        transcript_path = PROJECT_ROOT / transcript_filename
+        with open(transcript_path, "w") as f:
+            f.write(transcript.model_dump_json())
+
         # Convert to interactive timeline
         interactive_edl = orchestrator.get_interactive_timeline(edl)
 
@@ -205,6 +219,7 @@ def analyze_video(filename: str):
             "timeline": interactive_edl.model_dump(),
             "video_path": str(video_path),
             "edl_file": edl_filename,
+            "transcript_file": transcript_filename,
             "stats": {
                 "original_duration": edl.original_duration,
                 "final_duration": edl.final_duration,
@@ -466,3 +481,31 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+
+
+@app.get("/projects/{project_id}/transcript", response_model=Transcript)
+def get_project_transcript(project_id: str):
+    """Get transcript for a project."""
+    project = repository.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # Look for transcript file (legacy naming or new conventions)
+    # Check 1: In project dir with project_id
+    transcript_path = (
+        Path(project.source_video_path).parent / f"{project_id}.transcript.json"
+    )
+
+    if not transcript_path.exists():
+        # Fallback for manually analyzed files: next to source with .transcript.json
+        source_path = Path(project.source_video_path)
+        transcript_path = source_path.parent / f"{source_path.stem}.transcript.json"
+
+    if not transcript_path.exists():
+        raise HTTPException(status_code=404, detail="Transcript not found")
+
+    try:
+        with open(transcript_path) as f:
+            return Transcript.model_validate_json(f.read())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load transcript: {e}")

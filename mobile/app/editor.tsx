@@ -29,6 +29,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
 import Timeline from '../components/Timeline';
+import TranscriptView from '../components/TranscriptView';
 import GradientButton from '../components/GradientButton';
 import {
     TimelineSegment,
@@ -40,7 +41,9 @@ import {
     getProjectTimeline,
     updateProjectTimeline,
     startAnalysis,
-    ProjectMetadata
+    ProjectMetadata,
+    Transcript,
+    getProjectTranscript
 } from '../utils/api';
 import { colors, gradients, typography, spacing, radii, shadows } from '../utils/theme';
 
@@ -53,6 +56,7 @@ export default function EditorScreen() {
 
     const [project, setProject] = useState<ProjectMetadata | null>(null);
     const [timeline, setTimeline] = useState<TimelineType>({ segments: [], original_duration: 0 });
+    const [transcript, setTranscript] = useState<Transcript | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -81,9 +85,14 @@ export default function EditorScreen() {
                 }
 
                 if (proj.status === 'ready') {
-                    const edl = await getProjectTimeline(projectId);
-                    if (isMounted && edl) {
-                        setTimeline(edl);
+                    const [edl, transcriptData] = await Promise.all([
+                        getProjectTimeline(projectId),
+                        getProjectTranscript(projectId)
+                    ]);
+
+                    if (isMounted) {
+                        if (edl) setTimeline(edl);
+                        if (transcriptData) setTranscript(transcriptData);
                         setIsLoading(false);
                     }
                 } else if (proj.status === 'failed') {
@@ -352,6 +361,15 @@ export default function EditorScreen() {
                             projectId={project?.id}
                             thumbnailCount={project?.thumbnail_count}
                         />
+
+                        {/* Transcript View (Classic) */}
+                        {transcript && (
+                            <TranscriptView
+                                transcript={transcript}
+                                currentTime={currentTime}
+                                onSeek={handleSeek}
+                            />
+                        )}
 
                         {/* Render Button */}
                         <View style={styles.footer}>

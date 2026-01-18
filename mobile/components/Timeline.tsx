@@ -244,6 +244,7 @@ export default function Timeline({
                             ))}
                         </View>
 
+
                         {/* Thumbnails track (background layer) */}
                         {projectId && thumbnailCount > 0 && (
                             <View style={[styles.thumbnailsTrack, { width: timelineWidth }]}>
@@ -356,7 +357,7 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.bold,
     },
     scrubberContainer: {
-        height: 120,
+        height: 120, // Compacted from 160/180
         position: 'relative',
     },
     playhead: {
@@ -406,7 +407,7 @@ const styles = StyleSheet.create({
         height: 80,
         borderRadius: radii.sm,
         position: 'absolute',
-        top: 28,
+        top: 25, // Tighter margin (was 40/60)
         left: 0,
         flexDirection: 'row',
         overflow: 'hidden',
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
         height: 80,
         borderRadius: radii.sm,
         position: 'absolute',
-        top: 28,
+        top: 25, // Sync with thumbnailsTrack
         left: 0,
     },
     segmentBlock: {
@@ -459,5 +460,19 @@ const styles = StyleSheet.create({
     segmentHint: {
         fontSize: typography.fontSize.xs,
         color: colors.textMuted,
+    },
+    transcriptTrack: {
+        height: 30,
+        position: 'absolute',
+        top: 24,
+        left: 0,
+    },
+    transcriptWord: {
+        position: 'absolute',
+        fontSize: 10,
+        color: colors.textSecondary,
+        fontFamily: typography.fontFamily.mono,
+        textAlign: 'left',
+        top: 0,
     },
 });

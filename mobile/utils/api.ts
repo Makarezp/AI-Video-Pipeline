@@ -24,6 +24,19 @@ export interface Timeline {
     original_duration: number;
 }
 
+export interface WordSegment {
+    word: string;
+    start: number;
+    end: number;
+    confidence: number;
+}
+
+export interface Transcript {
+    segments: WordSegment[];
+    full_text: string;
+    duration: number;
+}
+
 export interface AnalyzeResponse {
     success: boolean;
     timeline: Timeline;
@@ -200,6 +213,13 @@ export async function updateProjectTimeline(projectId: string, timeline: Timelin
         body: JSON.stringify(timeline),
     });
     if (!response.ok) throw new Error(`Auto-save failed: ${response.status}`);
+}
+
+export async function getProjectTranscript(projectId: string): Promise<Transcript | null> {
+    const response = await fetch(`${API_BASE}/projects/${projectId}/transcript`);
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(`Fetch transcript failed: ${response.status}`);
+    return response.json();
 }
 
 export async function startAnalysis(projectId: string, instructions?: string): Promise<void> {

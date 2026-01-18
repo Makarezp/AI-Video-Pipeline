@@ -8,7 +8,7 @@ This is the refactored version of HybridVideoService.
 import logging
 from pathlib import Path
 
-from gigo.core.models import EditDecisionList, InteractiveEDL
+from gigo.core.models import EditDecisionList, InteractiveEDL, Transcript
 from gigo.services.transcription import TranscriptionService
 from gigo.services.analysis import AnalysisService
 from gigo.services.timeline import TimelineService
@@ -48,7 +48,7 @@ class VideoOrchestrator:
 
     async def process_async(
         self, video_path: Path, user_instructions: str | None = None
-    ) -> EditDecisionList:
+    ) -> tuple[EditDecisionList, Transcript]:
         """
         Process a video through the full analysis pipeline.
 
@@ -80,11 +80,11 @@ class VideoOrchestrator:
             f"{edl.compression_ratio:.1%} kept"
         )
 
-        return edl
+        return edl, transcript
 
     def process(
         self, video_path: Path, user_instructions: str | None = None
-    ) -> EditDecisionList:
+    ) -> tuple[EditDecisionList, Transcript]:
         """Sync wrapper for process_async."""
         import asyncio
 
