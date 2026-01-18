@@ -29,7 +29,9 @@ import { TimelineSegment, getThumbnailUrl } from '../utils/api';
 import { colors, typography, spacing, radii } from '../utils/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CENTER_OFFSET = SCREEN_WIDTH / 2;
+const CONTAINER_MARGIN = spacing.base * 2; // Left + Right margin
+const CONTAINER_WIDTH = SCREEN_WIDTH - CONTAINER_MARGIN;
+const CENTER_OFFSET = CONTAINER_WIDTH / 2;
 const PIXELS_PER_SECOND = 50; // Zoom level
 const THUMBNAIL_WIDTH = 50; // Width of each thumbnail in pixels
 
@@ -214,6 +216,7 @@ export default function Timeline({
                 </View>
 
                 {/* Animated scrollable timeline */}
+                {/* Animated scrollable timeline */}
                 <Animated.ScrollView
                     ref={scrollRef}
                     horizontal
@@ -222,62 +225,67 @@ export default function Timeline({
                     scrollEventThrottle={16}
                     decelerationRate="fast"
                     bounces={false}
-                    contentContainerStyle={{
-                        width: contentWidth,
-                        paddingHorizontal: CENTER_OFFSET,
-                    }}
                 >
-                    {/* Time markers row */}
-                    <View style={styles.timeMarkersRow}>
-                        {timeMarkers.map((time) => (
-                            <View
-                                key={time}
-                                style={[styles.timeMarker, { left: time * PIXELS_PER_SECOND }]}
-                            >
-                                <Text style={styles.timeMarkerText}>{formatTime(time)}</Text>
-                                <View style={styles.timeMarkerTick} />
-                            </View>
-                        ))}
-                    </View>
+                    {/* Left Spacer */}
+                    <View style={{ width: CENTER_OFFSET }} />
 
-                    {/* Thumbnails track (background layer) */}
-                    {projectId && thumbnailCount > 0 && (
-                        <View style={[styles.thumbnailsTrack, { width: timelineWidth }]}>
-                            {thumbnailIndices.map((index) => (
-                                <ThumbnailImage
-                                    key={index}
-                                    projectId={projectId}
-                                    index={index}
-                                    width={thumbnailWidth}
-                                />
+                    {/* Timeline Content Container */}
+                    <View style={{ width: timelineWidth, height: '100%' }}>
+                        {/* Time markers row */}
+                        <View style={styles.timeMarkersRow}>
+                            {timeMarkers.map((time) => (
+                                <View
+                                    key={time}
+                                    style={[styles.timeMarker, { left: time * PIXELS_PER_SECOND }]}
+                                >
+                                    <Text style={styles.timeMarkerText}>{formatTime(time)}</Text>
+                                    <View style={styles.timeMarkerTick} />
+                                </View>
                             ))}
                         </View>
-                    )}
 
-                    {/* Segments track (overlay) */}
-                    <View style={[styles.segmentsTrack, { width: timelineWidth }]}>
-                        {segments.map((segment, index) => {
-                            const isKeep = segment.action === 'keep';
-                            const segmentWidth = (segment.end - segment.start) * PIXELS_PER_SECOND;
-                            const segmentLeft = segment.start * PIXELS_PER_SECOND;
+                        {/* Thumbnails track (background layer) */}
+                        {projectId && thumbnailCount > 0 && (
+                            <View style={[styles.thumbnailsTrack, { width: timelineWidth }]}>
+                                {thumbnailIndices.map((index) => (
+                                    <ThumbnailImage
+                                        key={index}
+                                        projectId={projectId}
+                                        index={index}
+                                        width={thumbnailWidth}
+                                    />
+                                ))}
+                            </View>
+                        )}
 
-                            return (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={[
-                                        styles.segmentBlock,
-                                        {
-                                            left: segmentLeft,
-                                            width: Math.max(segmentWidth, 4), // Min width
-                                            borderColor: isKeep ? colors.success : colors.danger,
-                                        }
-                                    ]}
-                                    onPress={() => onToggleSegment(index)}
-                                    activeOpacity={0.8}
-                                />
-                            );
-                        })}
+                        {/* Segments track (overlay) */}
+                        <View style={[styles.segmentsTrack, { width: timelineWidth }]}>
+                            {segments.map((segment, index) => {
+                                const isKeep = segment.action === 'keep';
+                                const segmentWidth = (segment.end - segment.start) * PIXELS_PER_SECOND;
+                                const segmentLeft = segment.start * PIXELS_PER_SECOND;
+
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={[
+                                            styles.segmentBlock,
+                                            {
+                                                left: segmentLeft,
+                                                width: Math.max(segmentWidth, 4), // Min width
+                                                borderColor: isKeep ? colors.success : colors.danger,
+                                            }
+                                        ]}
+                                        onPress={() => onToggleSegment(index)}
+                                        activeOpacity={0.8}
+                                    />
+                                );
+                            })}
+                        </View>
                     </View>
+
+                    {/* Right Spacer */}
+                    <View style={{ width: CENTER_OFFSET }} />
                 </Animated.ScrollView>
             </View>
 
@@ -376,8 +384,8 @@ const styles = StyleSheet.create({
         height: 20,
         position: 'absolute',
         top: 0,
-        left: CENTER_OFFSET,
-        right: CENTER_OFFSET,
+        left: 0,
+        right: 0,
     },
     timeMarker: {
         position: 'absolute',
@@ -399,7 +407,7 @@ const styles = StyleSheet.create({
         borderRadius: radii.sm,
         position: 'absolute',
         top: 28,
-        left: CENTER_OFFSET,
+        left: 0,
         flexDirection: 'row',
         overflow: 'hidden',
     },
@@ -415,7 +423,7 @@ const styles = StyleSheet.create({
         borderRadius: radii.sm,
         position: 'absolute',
         top: 28,
-        left: CENTER_OFFSET,
+        left: 0,
     },
     segmentBlock: {
         position: 'absolute',
