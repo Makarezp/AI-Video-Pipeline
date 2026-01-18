@@ -38,28 +38,48 @@ We use a **Clean Architecture** design to ensure the engine is modular, testable
 ## 2. The Data Flow (Mobile-First Workflow)
 
 1. **Capture/Pick**: User selects a video in the **Expo Mobile App**.
-2. **Upload**: Video is streamed to the **FastAPI Backend**.
-3. **Internal Pipeline**:
+2. **Upload & Project Creation**: Video is uploaded to the **FastAPI Backend**, creating a persistent **Project** in local storage.
+3. **Background Analysis**:
+   - Analysis runs **asynchronously** (user returns to Dashboard immediately).
    - **Adapters**: Extract audio (FFmpeg), Transcribe (Whisper), Analyze (Gemini).
    - **Services**: Coordinate parallel chunk analysis to handle long videos without timeout.
-4. **Synthesis**:
-   - Whisper → Word Timestamps.
-   - Gemini + Preview Video + Transcript → Initial Edit Decisions.
-5. **Human-in-the-Loop Review**:
-   - The app displays an **Interactive Timeline**.
+4. **Project Library (Dashboard)**:
+   - Mobile app lists all projects with their **status** (Analyzing / Ready / Failed).
+   - User can tap into any project to resume editing.
+5. **Interactive Timeline Editor**:
    - **Green Zones**: Segments to keep.
    - **Red Zones**: Segments the AI suggests removing (with visible reasons like "Stutter" or "Silent Gap").
    - **User Override**: The user can "Flip" any segment between keep/remove with a single tap.
+   - **Auto-Save**: Every change is synced to the backend in real-time.
 6. **Rendering**:
    - Service applies temporal buffers (50ms lead-in, 150ms decay).
-   - FFmpeg slices the source and concatenates into a final masterpiece.
+   - FFmpeg uses **hardware-accelerated encoding** (`h264_videotoolbox` on macOS).
 7. **Delivery**:
    - Rendered video is saved to the backend.
-   - User downloads/shares directly to their **Phone Gallery (GIGO Album)**.
+   - User saves directly to their **Phone Gallery (GIGO Album)**.
 
 ---
 
-## 3. The "Secret Sauce"
+## 3. Project Persistence Layer
+
+The system now supports **persistent sessions** via a file-based repository:
+
+- **Storage Location**: `gigo/storage/projects/{uuid}/`
+- **Files per Project**:
+  - `source.mp4` — The original uploaded video.
+  - `project.json` — Metadata (name, status, timestamps).
+  - `edl.json` — The Edit Decision List (keeps/removes).
+- **API Endpoints**:
+  - `POST /projects` — Create (upload + background analysis).
+  - `GET /projects` — List all.
+  - `GET /projects/{id}` — Status check.
+  - `PATCH /projects/{id}/edl` — Auto-save timeline updates.
+
+This allows users to **close the app**, come back tomorrow, and **resume editing** exactly where they left off.
+
+---
+
+## 4. The "Secret Sauce"
 
 Most apps edit based on "silence." We edit based on **Intent** and **Context**.
 
@@ -69,12 +89,13 @@ Most apps edit based on "silence." We edit based on **Intent** and **Context**.
 
 ---
 
-## 4. Technical Strategy
+## 5. Technical Strategy
 
 - **Clean Architecture Hierarchy**:
   - `gigo/adapters/`: Infrastructure (FFmpeg, Whisper, Gemini).
   - `gigo/services/`: Application Logic (Transcription, Analysis, Timeline Rendering).
   - `gigo/core/`: Domain models & Orchestration.
+  - `gigo/storage/`: File-based Project Repository.
   - `mobile/`: React Native (Expo SDK 52) frontend.
 - **Dependency Injection**: A factory pattern wires the system, allowing any component (e.g., the analyzer) to be swapped without touching the core logic.
 - **Parallelism**: Large videos are semantically chunked and analyzed in parallel, slashing total processing time.
