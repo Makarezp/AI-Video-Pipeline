@@ -1,6 +1,6 @@
 # 🤖 AGENT HANDOFF: Project GIGO (Garbage In, Gold Out)
 
-Welcome, Agent. You are taking over a high-precision video editing engine.
+Welcome, Agent. You are taking over a high-precision video editing engine with a native mobile client.
 
 ---
 
@@ -9,8 +9,9 @@ Transform rambling, unscripted "talking head" videos into tight, viral content b
 
 ---
 
-## 🛠️ Architecture: Clean Architecture V3
+## 🛠️ Architecture Overview
 
+### Backend: Clean Architecture (`gigo/`)
 ```
 gigo/
 ├── adapters/              # Infrastructure Layer
@@ -24,11 +25,27 @@ gigo/
 ├── core/
 │   ├── orchestrator.py    # Thin coordinator (80 lines)
 │   ├── protocols.py       # Interfaces for DI
-│   └── models.py          # Pydantic data models
+│   ├── models.py          # Pydantic data models
+│   └── rendering.py       # FFmpeg rendering service
 ├── prompts/               # Externalized AI prompts
 ├── config.py              # Centralized configuration
 ├── factory.py             # Dependency injection wiring
 └── api.py                 # FastAPI endpoints
+```
+
+### Mobile Client: Expo React Native (`mobile/`)
+```
+mobile/
+├── app/                   # Expo Router screens
+│   ├── _layout.tsx        # Root layout & theme (dark mode)
+│   ├── index.tsx          # Home: video picker/record
+│   ├── upload.tsx         # Processing progress
+│   └── editor.tsx         # Timeline editor + save to gallery
+├── components/
+│   └── Timeline.tsx       # Custom interactive timeline
+├── utils/
+│   └── api.ts             # Backend API integration
+└── app.json               # Expo config with permissions
 ```
 
 ---
@@ -40,7 +57,8 @@ gigo/
 | [factory.py](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/factory.py) | Creates fully-wired orchestrator |
 | [orchestrator.py](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/core/orchestrator.py) | Main pipeline coordinator |
 | [api.py](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/gigo/api.py) | FastAPI endpoints |
-| [ui/](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/ui/) | Vanilla JS web app |
+| [mobile/](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/mobile/) | Expo React Native app |
+| [ui/](file:///Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My%20Drive/Projects/GarbageInGoldOut/ui/) | Legacy Vanilla JS web app |
 
 ---
 
@@ -59,21 +77,42 @@ gigo/
 - [x] Parallel Analysis (async)
 - [x] Hardware-Accelerated Rendering (`h264_videotoolbox`)
 
+### Mobile App (Expo SDK 52)
+- [x] **Home Screen**: Pick video from library or record new
+- [x] **Upload Screen**: Progress bar for upload + AI analysis
+- [x] **Editor Screen**: Video player with custom timeline
+- [x] **Timeline Component**: Tap segments to toggle keep/remove
+- [x] **Save to Gallery**: Download rendered video to device Photos (GIGO album)
+
 ---
 
 ## 🚀 Future Objectives
 1. **Unit Tests**: Mock adapters for fast testing
 2. **Multi-File Rendering**: Parallel segment rendering
-3. **Split/Merge UI**: Manual segment manipulation
+3. **Mobile Polish**: Animations, haptic feedback, export/share options
+4. **Production Deployment**: Configure API for cloud hosting
 
 ---
 
 ## 🏃 Quick Start
+
+### Backend API
 ```bash
 cd "/Users/acc/Library/CloudStorage/GoogleDrive-makarezp1@gmail.com/My Drive/Projects/GarbageInGoldOut"
 source .venv/bin/activate
-uvicorn gigo.api:app --reload --port 8000  # API server
-cd ui && python3 -m http.server 5173       # UI server
+uvicorn gigo.api:app --host 0.0.0.0 --port 8000
+```
+
+### Mobile App
+```bash
+cd mobile
+npm install
+npx expo start --ios
+```
+
+### Legacy Web UI
+```bash
+cd ui && python3 -m http.server 5173
 ```
 
 **Environment**: Requires `OPENAI_API_KEY` and `GEMINI_API_KEY` in `.env`.
