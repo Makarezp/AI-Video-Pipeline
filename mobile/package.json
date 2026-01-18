@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@shopify/flash-list": "^2.2.0",
     "expo": "~52.0.25",
     "expo-asset": "~11.0.5",
     "expo-av": "~15.0.1",

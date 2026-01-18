@@ -27,12 +27,13 @@ gigo/
 
 ## 📡 API Endpoints
 
-- `POST /projects` - Upload video & create project (Status: `created`)
+- `POST /projects` - Upload video & create project (generates thumbnails)
 - `POST /projects/{id}/analyze` - Start analysis with optional user instructions
 - `GET /projects` - List all projects
-- `GET /projects/{id}` - Get project status & metadata
+- `GET /projects/{id}` - Get project status & metadata (includes `thumbnail_count`)
 - `GET /projects/{id}/edl` - Get interactive timeline
 - `PATCH /projects/{id}/edl` - Auto-save timeline changes
+- `GET /projects/{id}/thumbnails/{filename}` - Serve thumbnail images (1 FPS filmstrip)
 - `GET /video/{path}` - Stream source video
 - `POST /render` - Render final video from timeline
 

@@ -438,6 +438,30 @@ def update_project_edl(project_id: str, timeline: InteractiveEDL):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/projects/{project_id}/thumbnails/{filename}")
+def get_project_thumbnail(project_id: str, filename: str):
+    """
+    Serve thumbnail images for a project.
+
+    Returns JPEG with aggressive caching (thumbnails are immutable).
+    """
+    project = repository.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    thumbnail_path = Path(project.thumbnail_path) / filename
+    if not thumbnail_path.exists():
+        raise HTTPException(status_code=404, detail="Thumbnail not found")
+
+    return FileResponse(
+        thumbnail_path,
+        media_type="image/jpeg",
+        headers={
+            "Cache-Control": "public, max-age=31536000, immutable",
+        },
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
 

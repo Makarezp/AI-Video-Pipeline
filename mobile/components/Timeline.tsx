@@ -1,20 +1,22 @@
 /**
- * Timeline - CapCut-style Fixed Playhead Scrubber
+ * Timeline - CapCut-style Fixed Playhead Scrubber with Thumbnails
  * 
  * Architecture based on Reanimated best practices:
  * - Fixed playhead in screen center
  * - Animated.ScrollView with UI-thread scroll handler
  * - isScrubbing flag prevents feedback loop
  * - Segment blocks with proportional widths
+ * - Thumbnail filmstrip using lazy-loaded images
  */
 
-import React, { useRef, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     StyleSheet,
     View,
     TouchableOpacity,
     Text,
     Dimensions,
+    Image,
 } from 'react-native';
 import Animated, {
     useSharedValue,
@@ -23,12 +25,13 @@ import Animated, {
     runOnJS,
     scrollTo,
 } from 'react-native-reanimated';
-import { TimelineSegment } from '../utils/api';
+import { TimelineSegment, getThumbnailUrl } from '../utils/api';
 import { colors, typography, spacing, radii } from '../utils/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CENTER_OFFSET = SCREEN_WIDTH / 2;
 const PIXELS_PER_SECOND = 50; // Zoom level
+const THUMBNAIL_WIDTH = 50; // Width of each thumbnail in pixels
 
 interface TimelineProps {
     segments: TimelineSegment[];
@@ -36,6 +39,54 @@ interface TimelineProps {
     currentTime: number;
     onSeek: (time: number) => void;
     onToggleSegment: (index: number) => void;
+    projectId?: string;
+    thumbnailCount?: number;
+}
+
+/**
+ * ThumbnailImage - Lazy-loaded thumbnail with retry on error
+ */
+function ThumbnailImage({
+    projectId,
+    index,
+    width
+}: {
+    projectId: string;
+    index: number;
+    width: number;
+}) {
+    const [retryCount, setRetryCount] = useState(0);
+    const [hasError, setHasError] = useState(false);
+    const maxRetries = 3;
+    const retryDelays = [1000, 2000, 5000];
+
+    const handleError = useCallback(() => {
+        if (retryCount < maxRetries) {
+            setTimeout(() => {
+                setRetryCount(prev => prev + 1);
+                setHasError(false);
+            }, retryDelays[retryCount] || 5000);
+        }
+        setHasError(true);
+    }, [retryCount]);
+
+    const uri = getThumbnailUrl(projectId, index);
+
+    if (hasError && retryCount >= maxRetries) {
+        return (
+            <View style={[styles.thumbnailPlaceholder, { width }]} />
+        );
+    }
+
+    return (
+        <Image
+            key={`${uri}-${retryCount}`}
+            source={{ uri }}
+            style={[styles.thumbnail, { width }]}
+            resizeMode="cover"
+            onError={handleError}
+        />
+    );
 }
 
 export default function Timeline({
@@ -44,6 +95,8 @@ export default function Timeline({
     currentTime,
     onSeek,
     onToggleSegment,
+    projectId,
+    thumbnailCount = 0,
 }: TimelineProps) {
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
@@ -55,6 +108,10 @@ export default function Timeline({
     // Timeline geometry
     const timelineWidth = duration * PIXELS_PER_SECOND;
     const contentWidth = timelineWidth + CENTER_OFFSET * 2;
+
+    // Calculate thumbnail data
+    const thumbnailSeconds = thumbnailCount > 0 ? thumbnailCount : Math.ceil(duration);
+    const thumbnailWidth = timelineWidth / thumbnailSeconds;
 
     // JS thread seek function (called from UI thread via runOnJS)
     const performSeek = useCallback((time: number) => {
@@ -114,6 +171,9 @@ export default function Timeline({
     const keepCount = segments.filter(s => s.action === 'keep').length;
     const removeCount = segments.filter(s => s.action === 'remove').length;
 
+    // Generate thumbnail indices (1-indexed)
+    const thumbnailIndices = Array.from({ length: thumbnailSeconds }, (_, i) => i + 1);
+
     return (
         <View style={styles.container}>
             {/* Header with time display */}
@@ -165,7 +225,21 @@ export default function Timeline({
                         ))}
                     </View>
 
-                    {/* Segments track */}
+                    {/* Thumbnails track (background layer) */}
+                    {projectId && thumbnailCount > 0 && (
+                        <View style={[styles.thumbnailsTrack, { width: timelineWidth }]}>
+                            {thumbnailIndices.map((index) => (
+                                <ThumbnailImage
+                                    key={index}
+                                    projectId={projectId}
+                                    index={index}
+                                    width={thumbnailWidth}
+                                />
+                            ))}
+                        </View>
+                    )}
+
+                    {/* Segments track (overlay) */}
                     <View style={[styles.segmentsTrack, { width: timelineWidth }]}>
                         {segments.map((segment, index) => {
                             const isKeep = segment.action === 'keep';
@@ -180,9 +254,6 @@ export default function Timeline({
                                         {
                                             left: segmentLeft,
                                             width: Math.max(segmentWidth, 4), // Min width
-                                            backgroundColor: isKeep
-                                                ? 'rgba(34, 197, 94, 0.7)'
-                                                : 'rgba(239, 68, 68, 0.5)',
                                             borderColor: isKeep ? colors.success : colors.danger,
                                         }
                                     ]}
@@ -262,7 +333,7 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.bold,
     },
     scrubberContainer: {
-        height: 90,
+        height: 120,
         position: 'relative',
     },
     playhead: {
@@ -308,9 +379,24 @@ const styles = StyleSheet.create({
         backgroundColor: colors.textMuted,
         marginTop: 2,
     },
-    segmentsTrack: {
-        height: 50,
+    thumbnailsTrack: {
+        height: 80,
+        borderRadius: radii.sm,
+        position: 'absolute',
+        top: 28,
+        left: CENTER_OFFSET,
+        flexDirection: 'row',
+        overflow: 'hidden',
+    },
+    thumbnail: {
+        height: 80,
+    },
+    thumbnailPlaceholder: {
+        height: 80,
         backgroundColor: colors.bgTertiary,
+    },
+    segmentsTrack: {
+        height: 80,
         borderRadius: radii.sm,
         position: 'absolute',
         top: 28,
@@ -318,10 +404,11 @@ const styles = StyleSheet.create({
     },
     segmentBlock: {
         position: 'absolute',
-        top: 4,
-        bottom: 4,
+        top: 0,
+        bottom: 0,
         borderRadius: radii.sm,
-        borderWidth: 2,
+        borderWidth: 3,
+        backgroundColor: 'transparent',
     },
     segmentInfo: {
         padding: spacing.base,

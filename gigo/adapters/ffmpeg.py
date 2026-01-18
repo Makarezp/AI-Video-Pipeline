@@ -147,6 +147,52 @@ class FFmpegVideoProcessor:
             compressed_path.unlink(missing_ok=True)
             return video_path
 
+    def extract_thumbnails(
+        self,
+        video_path: Path,
+        output_dir: Path,
+        fps: float = 1.0,
+        width: int = 160,
+    ) -> int:
+        """
+        Extract thumbnail images from video at regular intervals.
+
+        Args:
+            video_path: Path to source video
+            output_dir: Directory to save thumbnails
+            fps: Frames per second to extract (default: 1 = one per second)
+            width: Width of thumbnails in pixels (height auto-calculated)
+
+        Returns:
+            Number of thumbnails generated.
+        """
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        output_pattern = str(output_dir / "thumb_%04d.jpg")
+
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(video_path),
+            "-vf",
+            f"fps={fps},scale={width}:-1",
+            "-q:v",
+            "2",  # High quality JPEG
+            output_pattern,
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            logger.error(f"Thumbnail extraction failed: {result.stderr[-500:]}")
+            return 0
+
+        # Count generated files
+        count = len(list(output_dir.glob("thumb_*.jpg")))
+        logger.info(f"Generated {count} thumbnails in {output_dir}")
+        return count
+
     def split(self, video_path: Path, timestamps: list[float]) -> list[Path]:
         """
         Split video at given timestamps using FFmpeg.

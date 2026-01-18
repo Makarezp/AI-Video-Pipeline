@@ -91,7 +91,7 @@ mobile/
     - Auto-saves edits to backend
     - Polls for analysis completion (Stop-on-Ready optimization)
     - Full-screen video playback of source media
-- [x] **Timeline Component**: 60fps Reanimated interactions
+- [x] **Timeline Component**: 60fps Reanimated interactions with **thumbnail filmstrip**
 - [x] **Save to Gallery**: Download rendered video to device Photos
 
 ---

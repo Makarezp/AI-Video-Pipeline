@@ -10,7 +10,8 @@ The mobile companion app for **Garbage In, Gold Out**, built with Expo and React
   - **Deferred Analysis**: Analysis starts only when you say "Start Magic," allowing you to review the raw video first.
 - **Auto-Save Editor**: 
   - **Persistent State**: Changes are automatically synced to the backend as you edit.
-  - **Visual Feedback**: Green segments for "keep", red for "remove".
+  - **Thumbnail Filmstrip**: Visual frame-by-frame preview generated at 1 FPS for precise scrubbing.
+  - **Visual Feedback**: Green/red border frames for "keep"/"remove" segments.
   - **Interactive**: Tap any segment to toggle its status before rendering.
   - **Integrated Player**: Custom `expo-av` player synced with the scrubber timeline.
 - **One-Tap Export**: Render final localized videos on the backend and save directly to your device gallery.

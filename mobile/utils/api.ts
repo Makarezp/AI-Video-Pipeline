@@ -135,7 +135,18 @@ export interface ProjectMetadata {
     created_at: string;
     duration: number;
     thumbnail_path: string;
+    thumbnail_count: number;
     source_video_path: string;
+}
+
+/**
+ * Get URL for a project thumbnail image
+ * @param projectId - Project UUID
+ * @param index - 1-indexed thumbnail number (1, 2, 3...)
+ */
+export function getThumbnailUrl(projectId: string, index: number): string {
+    const paddedIndex = index.toString().padStart(4, '0');
+    return `${API_BASE}/projects/${projectId}/thumbnails/thumb_${paddedIndex}.jpg`;
 }
 
 export async function listProjects(): Promise<ProjectMetadata[]> {

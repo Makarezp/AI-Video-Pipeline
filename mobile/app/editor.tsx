@@ -348,6 +348,8 @@ export default function EditorScreen() {
                             currentTime={currentTime}
                             onSeek={handleSeek}
                             onToggleSegment={handleToggleSegment}
+                            projectId={project?.id}
+                            thumbnailCount={project?.thumbnail_count}
                         />
 
                         {/* Render Button */}

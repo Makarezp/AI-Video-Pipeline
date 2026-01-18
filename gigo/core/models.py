@@ -171,5 +171,6 @@ class ProjectMetadata(BaseModel):
     created_at: str
     duration: float = 0.0
     thumbnail_path: str = ""
+    thumbnail_count: int = 0
     source_video_path: str = ""
     user_instructions: str | None = None
