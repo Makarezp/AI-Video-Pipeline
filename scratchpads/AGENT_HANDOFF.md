@@ -102,6 +102,30 @@ mobile/
 
 ---
 
+## 📝 Documentation Policy
+
+After each significant change, update these files to reflect the **current product state**:
+
+| Document | Focus |
+|----------|-------|
+| `gigo/README.md` | Pipeline steps, API endpoints, architecture diagram |
+| `mobile/README.md` | User-facing features, screen descriptions, tech stack |
+| `scratchpads/garbageingoldout.md` | High-level product philosophy and data flow |
+| `scratchpads/AGENT_HANDOFF.md` | Developer onboarding, entry points, what's done |
+
+### What to Document
+- **Key architectural decisions** (e.g., "Why file-based storage vs. database?").
+- **Non-obvious behaviors** (e.g., "Polling stops when status is 'ready'").
+- **Integration points** (e.g., "Mobile app expects `/projects` endpoint").
+- **Known gotchas** (e.g., "Restart uvicorn after adding new endpoints").
+
+### What NOT to Document
+- Exhaustive changelogs (use git history for that).
+- Line-by-line code explanations.
+- Temporary debugging notes.
+
+**Goal**: A new agent should understand the product's *current* capabilities in under 5 minutes.
+
 ## 🏃 Quick Start
 
 ### Backend API
