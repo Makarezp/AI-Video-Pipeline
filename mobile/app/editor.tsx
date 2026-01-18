@@ -209,9 +209,27 @@ export default function EditorScreen() {
         }
     };
 
-    // Segment counts
     const keepCount = timeline.segments.filter(s => s.action === 'keep').length;
     const removeCount = timeline.segments.filter(s => s.action === 'remove').length;
+
+    if (isLoading) {
+        return (
+            <SafeAreaView style={[styles.container, styles.centerContent]}>
+                <View style={styles.loadingCard}>
+                    <Text style={styles.loadingEmoji}>🤖</Text>
+                    <Text style={styles.loadingText}>Analyzing Video...</Text>
+                    <Text style={styles.loadingSubtext}>Gemini is watching your content</Text>
+                    <Text style={styles.loadingSubtextSmall}>This may take a minute</Text>
+                </View>
+                <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => router.back()}
+                >
+                    <Text style={styles.closeIcon}>✕</Text>
+                </TouchableOpacity>
+            </SafeAreaView>
+        );
+    }
 
 
 
@@ -392,5 +410,48 @@ const styles = StyleSheet.create({
         fontSize: typography.fontSize.lg,
         fontWeight: typography.fontWeight.bold,
         color: colors.bgPrimary,
+    },
+    // Loading State Styles
+    centerContent: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingCard: {
+        alignItems: 'center',
+        padding: spacing.xl,
+    },
+    loadingEmoji: {
+        fontSize: 64,
+        marginBottom: spacing.lg,
+    },
+    loadingText: {
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.textPrimary,
+        marginBottom: spacing.sm,
+    },
+    loadingSubtext: {
+        fontSize: typography.fontSize.base,
+        color: colors.textSecondary,
+        marginBottom: spacing.xs,
+    },
+    loadingSubtextSmall: {
+        fontSize: typography.fontSize.sm,
+        color: colors.textMuted,
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 60,
+        right: spacing.lg,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: colors.bgSecondary,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    closeIcon: {
+        color: colors.textSecondary,
+        fontSize: 20,
     },
 });

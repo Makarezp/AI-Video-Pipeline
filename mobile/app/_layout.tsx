@@ -29,14 +29,7 @@ export default function RootLayout() {
                         headerShown: false, // Custom header in redesign
                     }}
                 />
-                <Stack.Screen
-                    name="upload"
-                    options={{
-                        title: 'Processing',
-                        presentation: 'modal',
-                        headerShown: false, // Custom UI in redesign
-                    }}
-                />
+
                 <Stack.Screen
                     name="editor"
                     options={{

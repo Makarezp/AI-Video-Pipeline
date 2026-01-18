@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, gradients, typography, spacing, radii, shadows } from '../utils/theme';
 import TabBar, { TabItem } from '../components/TabBar';
-import { listProjects, ProjectMetadata } from '../utils/api';
+import { listProjects, ProjectMetadata, createProject } from '../utils/api';
 
 const TABS: TabItem[] = [
     { id: 'home', icon: '🏠', label: 'Home' },
@@ -29,6 +29,7 @@ export default function HomeScreen() {
     const [activeTab, setActiveTab] = useState('home');
     const [projects, setProjects] = useState<ProjectMetadata[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
     useFocusEffect(
         useCallback(() => {
@@ -48,6 +49,26 @@ export default function HomeScreen() {
         }
     };
 
+    const handleUpload = async (uri: string) => {
+        setIsUploading(true);
+        try {
+            const filename = `video_${Date.now()}.mp4`;
+            // Upload & Create Project
+            const project = await createProject(uri, filename);
+
+            // Navigate directly to editor
+            router.push({
+                pathname: '/editor',
+                params: { projectId: project.id }
+            });
+        } catch (error) {
+            console.error('Upload failed:', error);
+            Alert.alert('Upload Failed', 'Could not upload video. Please try again.');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const pickVideo = async () => {
         try {
             const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -64,10 +85,7 @@ export default function HomeScreen() {
             });
 
             if (!result.canceled && result.assets[0]) {
-                router.push({
-                    pathname: '/upload',
-                    params: { videoUri: result.assets[0].uri },
-                });
+                await handleUpload(result.assets[0].uri);
             }
         } catch (error) {
             console.error('Error picking video:', error);
@@ -92,10 +110,7 @@ export default function HomeScreen() {
             });
 
             if (!result.canceled && result.assets[0]) {
-                router.push({
-                    pathname: '/upload',
-                    params: { videoUri: result.assets[0].uri },
-                });
+                await handleUpload(result.assets[0].uri);
             }
         } catch (error) {
             console.error('Error recording video:', error);
@@ -228,6 +243,17 @@ export default function HomeScreen() {
                 activeTab={activeTab}
                 onTabPress={handleTabPress}
             />
+
+            {/* Uploading Overlay */}
+            {isUploading && (
+                <View style={[styles.loadingOverlay, StyleSheet.absoluteFill]}>
+                    <View style={styles.loadingCard}>
+                        <Text style={styles.loadingEmoji}>🚀</Text>
+                        <Text style={styles.loadingText}>Uploading Video...</Text>
+                        <Text style={styles.loadingSubtext}>This will just take a moment</Text>
+                    </View>
+                </View>
+            )}
         </SafeAreaView>
     );
 }
@@ -414,5 +440,32 @@ const styles = StyleSheet.create({
     projectDate: {
         color: colors.textMuted,
         fontSize: typography.fontSize.xs,
+    },
+    loadingOverlay: {
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    loadingCard: {
+        backgroundColor: colors.bgSecondary,
+        padding: spacing.xl,
+        borderRadius: radii.xl,
+        alignItems: 'center',
+        ...shadows.lg,
+    },
+    loadingEmoji: {
+        fontSize: 48,
+        marginBottom: spacing.md,
+    },
+    loadingText: {
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.textPrimary,
+        marginBottom: spacing.xs,
+    },
+    loadingSubtext: {
+        fontSize: typography.fontSize.sm,
+        color: colors.textSecondary,
     },
 });
