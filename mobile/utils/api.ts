@@ -49,12 +49,12 @@ export interface RenderResponse {
 export async function uploadVideo(uri: string, filename: string): Promise<{ success: boolean; filename: string; path: string }> {
     const formData = new FormData();
 
-    // @ts-ignore - React Native FormData accepts this format
+    // React Native FormData accepts this format for file uploads
     formData.append('file', {
         uri,
         type: 'video/mp4',
         name: filename,
-    });
+    } as any);
 
     const response = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
@@ -119,9 +119,6 @@ export async function renderVideo(videoPath: string, timeline: Timeline): Promis
 /**
  * Get download URL for a rendered video
  */
-/**
- * Get download URL for a rendered video
- */
 export function getDownloadUrl(outputPath: string): string {
     // Extract just the filename from the full path
     const filename = outputPath.split('/').pop() || outputPath;
@@ -153,12 +150,12 @@ export async function listProjects(): Promise<ProjectMetadata[]> {
 
 export async function createProject(uri: string, filename: string): Promise<ProjectMetadata> {
     const formData = new FormData();
-    // @ts-ignore
+    // React Native FormData accepts this format for file uploads
     formData.append('file', {
         uri,
         type: 'video/mp4',
         name: filename,
-    });
+    } as any);
 
     const response = await fetch(`${API_BASE}/projects`, {
         method: 'POST',

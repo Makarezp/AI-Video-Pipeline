@@ -400,7 +400,7 @@ def get_project_edl(project_id: str):
 
 @app.patch("/projects/{project_id}/edl")
 def update_project_edl(project_id: str, timeline: InteractiveEDL):
-    """Update project status (Auto-save)."""
+    """Auto-save timeline edits from the mobile app."""
     # Convert back to EditDecisionList (keeps only)
     edl = timeline.to_edit_decision_list()
     try:

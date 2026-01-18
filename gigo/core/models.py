@@ -6,7 +6,7 @@ This ensures type safety and validation across the entire pipeline.
 """
 
 from pydantic import BaseModel, Field, field_validator
-from typing import Protocol
+from typing import Literal, Protocol
 from pathlib import Path
 
 
@@ -167,7 +167,7 @@ class ProjectMetadata(BaseModel):
 
     id: str
     name: str = "Untitled Project"
-    status: str = "analyzing"  # analyzing, ready, failed
+    status: Literal["analyzing", "ready", "failed"] = "analyzing"
     created_at: str
     duration: float = 0.0
     thumbnail_path: str = ""

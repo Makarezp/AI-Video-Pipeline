@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from uuid import uuid4
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Literal, List, Optional
 
 from gigo.core.models import ProjectMetadata, EditDecisionList
 
@@ -24,8 +24,8 @@ class FileSystemProjectRepository:
         project_dir = self.base_path / project_id
         project_dir.mkdir(exist_ok=True)
 
-        # Copy source video to project dir
-        dest_video_path = project_dir / "source.mp4"
+        # Copy source video to project dir (preserve original extension)
+        dest_video_path = project_dir / f"source{source_path.suffix}"
         shutil.copy2(source_path, dest_video_path)
 
         # Initialize metadata
@@ -84,7 +84,9 @@ class FileSystemProjectRepository:
         with open(edl_path, "r") as f:
             return EditDecisionList.model_validate_json(f.read())
 
-    def update_status(self, project_id: str, status: str) -> None:
+    def update_status(
+        self, project_id: str, status: Literal["analyzing", "ready", "failed"]
+    ) -> None:
         """Update project status."""
         project_dir = self.base_path / project_id
         if not project_dir.exists():
