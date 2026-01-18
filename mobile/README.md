@@ -5,7 +5,7 @@ The mobile companion app for **Garbage In, Gold Out**, built with Expo and React
 ## 🚀 Features
 
 - **Project Library**: A persistent dashboard to manage and resume multiple editing sessions.
-- **Background AI Pipeline**: Upload videos and return to the dashboard immediately; analysis happens in the background.
+- **Background AI Pipeline**: Upload videos and jump straight to the Editor. You can watch your raw video immediately while the AI analyzes it in the background.
 - **Auto-Save Editor**: 
   - **Persistent State**: Changes are automatically synced to the backend as you edit.
   - **Visual Feedback**: Green segments for "keep", red for "remove".
@@ -73,7 +73,6 @@ mobile/
 ├── app/                  # Expo Router screens
 │   ├── _layout.tsx       # Root layout & theme (Dark Mode)
 │   ├── index.tsx         # Project Dashboard (Library list)
-│   ├── upload.tsx        # Background upload logic
 │   └── editor.tsx        # Project-aware timeline editor
 ├── components/           # UI Components
 │   └── Timeline.tsx      # Custom Interactive Timeline

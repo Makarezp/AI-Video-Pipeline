@@ -39,7 +39,6 @@ mobile/
 ├── app/                   # Expo Router screens
 │   ├── _layout.tsx        # Root layout & theme (dark mode)
 │   ├── index.tsx          # Home: video picker/record
-│   ├── upload.tsx         # Processing progress
 │   └── editor.tsx         # Timeline editor + save to gallery
 ├── components/
 │   └── Timeline.tsx       # Custom interactive timeline
@@ -83,9 +82,10 @@ mobile/
 
 ### Mobile App (Expo SDK 52)
 - [x] **Dashboard**: Persistent list of projects with status (Analyzing/Ready)
-- [x] **Upload**: Background uploads + Immediate redirect to dashboard
+- [x] **Upload**: Background uploads + Immediate redirect to Editor
 - [x] **Editor**: 
     - Loads persistent projects by ID
+    - **Non-blocking Analysis**: View raw video while AI processes in background
     - Auto-saves edits to backend
     - Polls for analysis completion (Stop-on-Ready optimization)
     - Full-screen video playback of source media
