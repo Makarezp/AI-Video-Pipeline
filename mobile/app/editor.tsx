@@ -3,8 +3,10 @@ import { StyleSheet, View, TouchableOpacity, Text, Alert, Dimensions } from 'rea
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system';
 import Timeline from '../components/Timeline';
-import { TimelineSegment, Timeline as TimelineType, getVideoUrl, renderVideo } from '../utils/api';
+import { TimelineSegment, Timeline as TimelineType, getVideoUrl, renderVideo, getDownloadUrl } from '../utils/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -29,6 +31,7 @@ export default function EditorScreen() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [isRendering, setIsRendering] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Get video filename from path
     const videoFilename = params.videoPath?.split('/').pop() || '';
@@ -65,6 +68,40 @@ export default function EditorScreen() {
         });
     };
 
+    const saveToGallery = async (outputPath: string) => {
+        setIsSaving(true);
+        try {
+            // Request permissions
+            const { status } = await MediaLibrary.requestPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission Required', 'Please allow access to save videos to your gallery.');
+                return false;
+            }
+
+            // Download the video from the server
+            const downloadUrl = getDownloadUrl(outputPath);
+            const filename = outputPath.split('/').pop() || 'edited_video.mp4';
+            const localUri = `${FileSystem.cacheDirectory}${filename}`;
+
+            const downloadResult = await FileSystem.downloadAsync(downloadUrl, localUri);
+
+            if (downloadResult.status !== 200) {
+                throw new Error('Failed to download video');
+            }
+
+            // Save to gallery
+            const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+            await MediaLibrary.createAlbumAsync('GIGO', asset, false);
+
+            return true;
+        } catch (error) {
+            console.error('Save to gallery error:', error);
+            throw error;
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleRender = async () => {
         if (!params.videoPath) return;
 
@@ -72,12 +109,31 @@ export default function EditorScreen() {
         try {
             const result = await renderVideo(params.videoPath, timeline);
 
-            if (result.success) {
+            if (result.success && result.output_path) {
                 Alert.alert(
                     '✅ Render Complete',
-                    'Your edited video is ready!',
+                    'Your edited video is ready! Would you like to save it to your gallery?',
                     [
-                        { text: 'OK', onPress: () => router.replace('/') }
+                        { text: 'No Thanks', style: 'cancel', onPress: () => router.replace('/') },
+                        {
+                            text: '📱 Save to Gallery',
+                            onPress: async () => {
+                                try {
+                                    await saveToGallery(result.output_path!);
+                                    Alert.alert(
+                                        '✅ Saved!',
+                                        'Video saved to your gallery in the "GIGO" album.',
+                                        [{ text: 'OK', onPress: () => router.replace('/') }]
+                                    );
+                                } catch (error) {
+                                    Alert.alert(
+                                        'Save Failed',
+                                        error instanceof Error ? error.message : 'Could not save video',
+                                        [{ text: 'OK', onPress: () => router.replace('/') }]
+                                    );
+                                }
+                            }
+                        }
                     ]
                 );
             } else {
@@ -151,12 +207,12 @@ export default function EditorScreen() {
             {/* Render Button */}
             <View style={styles.footer}>
                 <TouchableOpacity
-                    style={[styles.renderButton, isRendering && styles.renderButtonDisabled]}
+                    style={[styles.renderButton, (isRendering || isSaving) && styles.renderButtonDisabled]}
                     onPress={handleRender}
-                    disabled={isRendering}
+                    disabled={isRendering || isSaving}
                 >
                     <Text style={styles.renderButtonText}>
-                        {isRendering ? '⏳ Rendering...' : '🎬 Render Video'}
+                        {isRendering ? '⏳ Rendering...' : isSaving ? '💾 Saving...' : '🎬 Render Video'}
                     </Text>
                 </TouchableOpacity>
             </View>

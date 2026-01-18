@@ -1,51 +1,59 @@
 {
-  "expo": {
-    "name": "GIGO",
-    "slug": "gigo-mobile",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
-    "scheme": "gigo",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1a1a1a"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.gigo.app"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1a1a1a"
-      },
-      "edgeToEdgeEnabled": true,
-      "package": "com.gigo.app"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "metro"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "Allow GIGO to access your photos to select videos for editing.",
-          "cameraPermission": "Allow GIGO to access your camera to record videos."
-        }
-      ],
-      [
-        "expo-av",
-        {
-          "microphonePermission": "Allow GIGO to access your microphone for video recording."
-        }
-      ],
-      "expo-asset",
-      "expo-font"
-    ]
-  }
+    "expo": {
+        "name": "GIGO",
+        "slug": "gigo-mobile",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/icon.png",
+        "userInterfaceStyle": "dark",
+        "newArchEnabled": true,
+        "scheme": "gigo",
+        "splash": {
+            "image": "./assets/splash-icon.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#1a1a1a"
+        },
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.gigo.app"
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/adaptive-icon.png",
+                "backgroundColor": "#1a1a1a"
+            },
+            "edgeToEdgeEnabled": true,
+            "package": "com.gigo.app"
+        },
+        "web": {
+            "favicon": "./assets/favicon.png",
+            "bundler": "metro"
+        },
+        "plugins": [
+            "expo-router",
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "Allow GIGO to access your photos to select videos for editing.",
+                    "cameraPermission": "Allow GIGO to access your camera to record videos."
+                }
+            ],
+            [
+                "expo-av",
+                {
+                    "microphonePermission": "Allow GIGO to access your microphone for video recording."
+                }
+            ],
+            "expo-asset",
+            "expo-font",
+            [
+                "expo-media-library",
+                {
+                    "photosPermission": "Allow GIGO to save edited videos to your photo gallery.",
+                    "savePhotosPermission": "Allow GIGO to save edited videos to your photo gallery.",
+                    "isAccessMediaLocationEnabled": true
+                }
+            ]
+        ]
+    }
 }

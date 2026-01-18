@@ -115,3 +115,12 @@ export async function renderVideo(videoPath: string, timeline: Timeline): Promis
 
     return response.json();
 }
+
+/**
+ * Get download URL for a rendered video
+ */
+export function getDownloadUrl(outputPath: string): string {
+    // Extract just the filename from the full path
+    const filename = outputPath.split('/').pop() || outputPath;
+    return `${API_BASE}/video/${encodeURIComponent(filename)}`;
+}
