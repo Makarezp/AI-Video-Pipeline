@@ -29,3 +29,6 @@ build/
 logs/
 gemini_response_*.txt
 *.log
+
+# Project Storage (local data)
+gigo/storage/
