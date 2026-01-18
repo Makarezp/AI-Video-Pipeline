@@ -167,8 +167,9 @@ class ProjectMetadata(BaseModel):
 
     id: str
     name: str = "Untitled Project"
-    status: Literal["analyzing", "ready", "failed"] = "analyzing"
+    status: Literal["created", "analyzing", "ready", "failed"] = "created"
     created_at: str
     duration: float = 0.0
     thumbnail_path: str = ""
     source_video_path: str = ""
+    user_instructions: str | None = None

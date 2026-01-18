@@ -20,13 +20,15 @@ gigo/
 ### The Pipeline
 1. **Project Library** → Persistent file-based storage of sessions
 2. **Whisper** → Word-level timestamps from audio
-3. **Smart Chunking** → Semantic splits via Gemini Flash
-4. **Parallel Analysis** → Concurrent Gemini 3 analysis
+3. **Calibration** → Apps can provide user instructions to guide editing
+4. **Smart Chunking** → Semantic splits via Gemini Flash
+5. **Parallel Analysis** → Concurrent Gemini 3 analysis
 5. **Mobile Editor** → Persistent timeline state & background rendering
 
 ## 📡 API Endpoints
 
-- `POST /projects` - Upload video & start background analysis
+- `POST /projects` - Upload video & create project (Status: `created`)
+- `POST /projects/{id}/analyze` - Start analysis with optional user instructions
 - `GET /projects` - List all projects
 - `GET /projects/{id}` - Get project status & metadata
 - `GET /projects/{id}/edl` - Get interactive timeline

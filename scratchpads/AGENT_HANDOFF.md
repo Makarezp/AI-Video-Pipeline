@@ -72,6 +72,7 @@ mobile/
 ### Core Features
 - [x] Smart Chunking (semantic splits)
 - [x] Parallel Analysis (async)
+- [x] **User Instructions**: Calibration step allowing custom prompts/guidance for AI
 - [x] Hardware-Accelerated Rendering (`h264_videotoolbox`)
 - [x] **Gemini Stability**: Safety settings (`BLOCK_NONE`) & robust MIME detection
 
@@ -85,6 +86,7 @@ mobile/
 - [x] **Upload**: Background uploads + Immediate redirect to Editor
 - [x] **Editor**: 
     - Loads persistent projects by ID
+    - **Calibration Flow**: Review video and inputs instructions before analysis
     - **Non-blocking Analysis**: View raw video while AI processes in background
     - Auto-saves edits to backend
     - Polls for analysis completion (Stop-on-Ready optimization)

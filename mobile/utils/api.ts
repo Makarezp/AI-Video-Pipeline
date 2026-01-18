@@ -133,7 +133,7 @@ export function getDownloadUrl(outputPath: string): string {
 export interface ProjectMetadata {
     id: string;
     name: string;
-    status: 'analyzing' | 'ready' | 'failed';
+    status: 'created' | 'analyzing' | 'ready' | 'failed';
     created_at: string;
     duration: number;
     thumbnail_path: string;
@@ -191,4 +191,15 @@ export async function updateProjectTimeline(projectId: string, timeline: Timelin
         body: JSON.stringify(timeline),
     });
     if (!response.ok) throw new Error(`Auto-save failed: ${response.status}`);
+}
+
+export async function startAnalysis(projectId: string, instructions?: string): Promise<void> {
+    const url = `${API_BASE}/projects/${projectId}/analyze${instructions ? `?instructions=${encodeURIComponent(instructions)}` : ''}`;
+    const response = await fetch(url, {
+        method: 'POST',
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to start analysis: ${response.status}`);
+    }
 }

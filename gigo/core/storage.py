@@ -32,7 +32,7 @@ class FileSystemProjectRepository:
         metadata = ProjectMetadata(
             id=project_id,
             name=source_path.stem,
-            status="analyzing",
+            status="created",
             created_at=datetime.now(timezone.utc).isoformat(),
             source_video_path=str(dest_video_path),
             thumbnail_path="",
@@ -40,6 +40,13 @@ class FileSystemProjectRepository:
         self._save_metadata(project_dir, metadata)
 
         return metadata
+
+    def save_project(self, project: ProjectMetadata) -> None:
+        """Save project metadata."""
+        project_dir = self.base_path / project.id
+        if not project_dir.exists():
+            raise FileNotFoundError(f"Project {project.id} not found")
+        self._save_metadata(project_dir, project)
 
     def get_project(self, project_id: str) -> Optional[ProjectMetadata]:
         """Get project metadata by ID."""
@@ -85,7 +92,9 @@ class FileSystemProjectRepository:
             return EditDecisionList.model_validate_json(f.read())
 
     def update_status(
-        self, project_id: str, status: Literal["analyzing", "ready", "failed"]
+        self,
+        project_id: str,
+        status: Literal["created", "analyzing", "ready", "failed"],
     ) -> None:
         """Update project status."""
         project_dir = self.base_path / project_id

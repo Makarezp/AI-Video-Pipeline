@@ -56,13 +56,19 @@ class GeminiVideoAnalyzer:
         self._prompt_template = prompt_template
         self._log_dir = log_dir
 
-    def analyze(self, video_path: Path, transcript: Transcript) -> EditDecisionList:
+    def analyze(
+        self,
+        video_path: Path,
+        transcript: Transcript,
+        user_instructions: str | None = None,
+    ) -> EditDecisionList:
         """
         Analyze video content and decide which segments to keep/remove.
 
         Args:
             video_path: Path to video file
             transcript: Transcript with word-level timestamps
+            user_instructions: Optional user guidance
 
         Returns:
             EditDecisionList with keep/remove decisions.
@@ -83,7 +89,7 @@ class GeminiVideoAnalyzer:
 
         # Format transcript and build prompt
         transcript_text = self._format_transcript(transcript)
-        prompt = self._build_prompt(transcript, transcript_text)
+        prompt = self._build_prompt(transcript, transcript_text, user_instructions)
 
         # Call Gemini
         logger.info("Analyzing with Gemini...")
@@ -149,10 +155,25 @@ class GeminiVideoAnalyzer:
             lines.append(f"[{seg.start:.2f}-{seg.end:.2f}] {seg.word}")
         return "\n".join(lines)
 
-    def _build_prompt(self, transcript: Transcript, transcript_text: str) -> str:
+    def _build_prompt(
+        self,
+        transcript: Transcript,
+        transcript_text: str,
+        user_instructions: str | None = None,
+    ) -> str:
         """Build the full analysis prompt."""
+        base_prompt = self._prompt_template
+
+        if user_instructions:
+            base_prompt += (
+                "\n\nUSER INSTRUCTIONS:\n"
+                "The user has provided specific guidance for editing this video. "
+                "Follow these instructions carefully:\n"
+                f'"{user_instructions}"\n'
+            )
+
         return (
-            self._prompt_template
+            base_prompt
             + f"\n\nCRITICAL: The video duration is EXACTLY {transcript.duration:.2f} seconds. "
             f"DO NOT return any timestamp greater than {transcript.duration:.2f}. "
             "For this long video, focus on LARGER blocks to avoid reaching output token limits.\n\n"

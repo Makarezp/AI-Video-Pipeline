@@ -93,7 +93,7 @@ def run_project_analysis(project_id: str):
 
         # Run analysis
         source_path = Path(project.source_video_path)
-        edl = orchestrator.process(source_path)
+        edl = orchestrator.process(source_path, project.user_instructions)
 
         # Save EDL
         repository.save_edl(project.id, edl)
@@ -360,15 +360,43 @@ async def create_project(
         # Clean up temp
         temp_path.unlink()
 
-        # Trigger background analysis
-        background_tasks.add_task(run_project_analysis, project.id)
-
         return project
 
     except Exception as e:
         if temp_path.exists():
             temp_path.unlink()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/projects/{project_id}/analyze")
+async def start_project_analysis(
+    project_id: str,
+    background_tasks: BackgroundTasks,
+    instructions: Optional[str] = None,
+):
+    """
+    Trigger analysis for an existing project.
+    Optionally accepts user instructions to guide the AI.
+    """
+    project = repository.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    if project.status == "analyzing":
+        raise HTTPException(status_code=400, detail="Analysis already in progress")
+
+    # Update project with instructions if provided
+    if instructions:
+        project.user_instructions = instructions
+        repository.save_project(project)
+
+    # Set status to analyzing immediately to prevent double-clicks
+    repository.update_status(project_id, "analyzing")
+
+    # Trigger background task
+    background_tasks.add_task(run_project_analysis, project_id)
+
+    return {"success": True, "status": "analyzing"}
 
 
 @app.get("/projects", response_model=list[ProjectMetadata])

@@ -46,12 +46,15 @@ class VideoOrchestrator:
         self._analysis = analysis_service
         self._timeline = timeline_service
 
-    async def process_async(self, video_path: Path) -> EditDecisionList:
+    async def process_async(
+        self, video_path: Path, user_instructions: str | None = None
+    ) -> EditDecisionList:
         """
         Process a video through the full analysis pipeline.
 
         Args:
             video_path: Path to video file
+            user_instructions: Optional user guidance for calibration
 
         Returns:
             EditDecisionList with keep/remove decisions
@@ -68,7 +71,9 @@ class VideoOrchestrator:
 
         # Step 2: Analyze
         logger.info("[2/2] Analyzing with Gemini...")
-        edl = await self._analysis.analyze_async(video_path, transcript)
+        edl = await self._analysis.analyze_async(
+            video_path, transcript, user_instructions
+        )
 
         logger.info(
             f"Analysis complete: {len(edl.keep_segments)} segments, "
@@ -77,11 +82,13 @@ class VideoOrchestrator:
 
         return edl
 
-    def process(self, video_path: Path) -> EditDecisionList:
+    def process(
+        self, video_path: Path, user_instructions: str | None = None
+    ) -> EditDecisionList:
         """Sync wrapper for process_async."""
         import asyncio
 
-        return asyncio.run(self.process_async(video_path))
+        return asyncio.run(self.process_async(video_path, user_instructions))
 
     def get_interactive_timeline(self, edl: EditDecisionList) -> InteractiveEDL:
         """Convert EDL to interactive timeline for UI."""

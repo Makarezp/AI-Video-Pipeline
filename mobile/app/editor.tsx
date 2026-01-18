@@ -9,7 +9,19 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Alert, Dimensions } from 'react-native';
+import {
+    StyleSheet,
+    View,
+    TouchableOpacity,
+    Text,
+    Alert,
+    Dimensions,
+    TextInput,
+    KeyboardAvoidingView,
+    Platform,
+    TouchableWithoutFeedback,
+    Keyboard
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +29,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
 import Timeline from '../components/Timeline';
+import GradientButton from '../components/GradientButton';
 import {
     TimelineSegment,
     Timeline as TimelineType,
@@ -26,6 +39,7 @@ import {
     getProject,
     getProjectTimeline,
     updateProjectTimeline,
+    startAnalysis,
     ProjectMetadata
 } from '../utils/api';
 import { colors, gradients, typography, spacing, radii, shadows } from '../utils/theme';
@@ -42,6 +56,8 @@ export default function EditorScreen() {
     const [isLoading, setIsLoading] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
+    const [instructions, setInstructions] = useState('');
+    const [isStartingAnalysis, setIsStartingAnalysis] = useState(false);
     const [isRendering, setIsRendering] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -59,6 +75,11 @@ export default function EditorScreen() {
                 if (!isMounted) return;
                 setProject(proj);
 
+                // If user accidentally lands on editor with "created" status but we started analysis locally
+                if (proj.status === 'created' && isStartingAnalysis) {
+                    // Do nothing, wait for local state to update or just show analyzing
+                }
+
                 if (proj.status === 'ready') {
                     const edl = await getProjectTimeline(projectId);
                     if (isMounted && edl) {
@@ -68,7 +89,7 @@ export default function EditorScreen() {
                 } else if (proj.status === 'failed') {
                     Alert.alert('Analysis Failed', 'The AI analysis could not complete.');
                     setIsLoading(false);
-                } else {
+                } else if (proj.status === 'analyzing') {
                     // Still analyzing - schedule next poll
                     setIsLoading(true);
                     timeoutId = setTimeout(loadData, 3000);
@@ -88,6 +109,21 @@ export default function EditorScreen() {
             clearTimeout(timeoutId);
         };
     }, [projectId]);
+
+    const handleStartAnalysis = async () => {
+        if (!project) return;
+        setIsStartingAnalysis(true);
+        try {
+            await startAnalysis(project.id, instructions);
+            // Optimistically update status to trigger polling UI
+            setProject({ ...project, status: 'analyzing' });
+            setIsLoading(true);
+        } catch (error) {
+            console.error('Failed to start analysis:', error);
+            Alert.alert('Error', 'Could not start analysis.');
+            setIsStartingAnalysis(false);
+        }
+    };
 
     // Auto-save when timeline changes
     const handleToggleSegment = async (index: number) => {
@@ -166,15 +202,6 @@ export default function EditorScreen() {
 
         setIsRendering(true);
         try {
-            // Re-use renderVideo but pass source path from project
-            // Note: renderVideo expects path relative to project root or absolute?
-            // API expects `video_path`. Backend handles it.
-            // Project `source_video_path` is absolute path on server.
-            // But `renderVideo` (API) expects filename usually?
-            // Wait, storage logic saves full path: `source_video_path=dest_video_path` (absolute).
-            // Backend `render_video` takes `request.video_path` and `Path(request.video_path)`.
-            // So absolute path works if on same machine.
-
             const result = await renderVideo(project.source_video_path, timeline);
 
             if (result.success && result.output_path) {
@@ -212,9 +239,9 @@ export default function EditorScreen() {
     const keepCount = timeline.segments.filter(s => s.action === 'keep').length;
     const removeCount = timeline.segments.filter(s => s.action === 'remove').length;
 
+    // --- RENDER ---
 
-
-
+    const showCalibration = project?.status === 'created' || isStartingAnalysis;
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -228,9 +255,11 @@ export default function EditorScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.headerStats}>
-                    {isLoading ? (
+                    {isLoading || showCalibration ? (
                         <View style={[styles.statBadge, { backgroundColor: colors.bgTertiary }]}>
-                            <Text style={styles.statBadgeText}>🤖 Analyzing...</Text>
+                            <Text style={styles.statBadgeText}>
+                                {showCalibration ? '🛠️ Calibration' : '🤖 Analyzing...'}
+                            </Text>
                         </View>
                     ) : (
                         <>
@@ -252,63 +281,98 @@ export default function EditorScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* Video Player */}
-            <View style={styles.videoContainer}>
-                <Video
-                    ref={videoRef}
-                    source={{ uri: videoUrl }}
-                    style={styles.video}
-                    resizeMode={ResizeMode.CONTAIN}
-                    shouldPlay={false}
-                    isLooping={false}
-                    onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
-                />
+            {/* Content Area */}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+            >
+                {/* Video Player */}
+                <View style={styles.videoContainer}>
+                    <Video
+                        ref={videoRef}
+                        source={{ uri: videoUrl }}
+                        style={styles.video}
+                        resizeMode={ResizeMode.CONTAIN}
+                        shouldPlay={false}
+                        isLooping={false}
+                        onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
+                    />
 
-                {/* Play/Pause overlay */}
-                <TouchableOpacity
-                    style={styles.playOverlay}
-                    onPress={togglePlayPause}
-                    activeOpacity={0.9}
-                >
-                    {!isPlaying && (
-                        <View style={styles.playButton}>
-                            <Text style={styles.playIcon}>▶</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-            </View>
-
-            {/* Timeline */}
-            <Timeline
-                segments={timeline.segments}
-                duration={timeline.original_duration}
-                currentTime={currentTime}
-                onSeek={handleSeek}
-                onToggleSegment={handleToggleSegment}
-            />
-
-
-
-            {/* Render Button */}
-            <View style={styles.footer}>
-                <TouchableOpacity
-                    style={styles.renderButton}
-                    onPress={handleRender}
-                    disabled={isRendering || isSaving || isLoading}
-                    activeOpacity={0.9}
-                >
-                    <LinearGradient
-                        colors={isRendering || isSaving || isLoading ? [colors.bgTertiary, colors.bgTertiary] : gradients.gold}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.renderButtonGradient}
+                    {/* Play/Pause overlay */}
+                    <TouchableOpacity
+                        style={styles.playOverlay}
+                        onPress={togglePlayPause}
+                        activeOpacity={0.9}
                     >
-                        <Text style={styles.renderButtonText}>
-                            {isLoading ? '🤖 Analyzing Video...' : isRendering ? '⏳ Rendering...' : isSaving ? '💾 Saving...' : '🎬 Export Video'}
-                        </Text>
-                    </LinearGradient>
-                </TouchableOpacity>
-            </View>
+                        {!isPlaying && (
+                            <View style={styles.playButton}>
+                                <Text style={styles.playIcon}>▶</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </View>
+
+                {showCalibration ? (
+                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                        <View style={styles.calibrationContainer}>
+                            <Text style={styles.calibrationTitle}>Calibrate Your AI ⚡</Text>
+                            <Text style={styles.calibrationSubtitle}>
+                                The AI analyzes visuals and audio automatically.
+                                Add specific instructions if you want, or leave blank for auto-magic.
+                            </Text>
+
+                            <TextInput
+                                style={styles.instructionInput}
+                                placeholder="(Optional) e.g. 'Remove all pauses', 'Keep only the funny parts'..."
+                                placeholderTextColor={colors.textMuted}
+                                multiline
+                                value={instructions}
+                                onChangeText={setInstructions}
+                            />
+
+                            <GradientButton
+                                title="Start Magic ✨"
+                                onPress={handleStartAnalysis}
+                                loading={isStartingAnalysis}
+                                style={styles.startButton}
+                            />
+                        </View>
+                    </TouchableWithoutFeedback>
+                ) : (
+                    <>
+                        {/* Timeline */}
+                        <Timeline
+                            segments={timeline.segments}
+                            duration={timeline.original_duration}
+                            currentTime={currentTime}
+                            onSeek={handleSeek}
+                            onToggleSegment={handleToggleSegment}
+                        />
+
+                        {/* Render Button */}
+                        <View style={styles.footer}>
+                            <TouchableOpacity
+                                style={styles.renderButton}
+                                onPress={handleRender}
+                                disabled={isRendering || isSaving || isLoading}
+                                activeOpacity={0.9}
+                            >
+                                <LinearGradient
+                                    colors={isRendering || isSaving || isLoading ? [colors.bgTertiary, colors.bgTertiary] : gradients.gold}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.renderButtonGradient}
+                                >
+                                    <Text style={styles.renderButtonText}>
+                                        {isLoading ? '🤖 Analyzing Video...' : isRendering ? '⏳ Rendering...' : isSaving ? '💾 Saving...' : '🎬 Export Video'}
+                                    </Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        </View>
+                    </>
+                )}
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
@@ -402,7 +466,39 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.bold,
         color: colors.bgPrimary,
     },
-
+    calibrationContainer: {
+        flex: 1,
+        padding: spacing.lg,
+        alignItems: 'center',
+    },
+    calibrationTitle: {
+        fontSize: typography.fontSize.xl,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.textPrimary,
+        marginBottom: spacing.xs,
+        marginTop: spacing.md,
+    },
+    calibrationSubtitle: {
+        fontSize: typography.fontSize.sm,
+        color: colors.textSecondary,
+        textAlign: 'center',
+        marginBottom: spacing.xl,
+        lineHeight: 20,
+    },
+    instructionInput: {
+        width: '100%',
+        backgroundColor: colors.bgSecondary,
+        borderRadius: radii.lg,
+        padding: spacing.md,
+        color: colors.textPrimary,
+        fontSize: typography.fontSize.base,
+        minHeight: 120,
+        textAlignVertical: 'top',
+        marginBottom: spacing.xl,
+    },
+    startButton: {
+        width: '100%',
+    },
     closeButton: {
         position: 'absolute',
         top: 60,

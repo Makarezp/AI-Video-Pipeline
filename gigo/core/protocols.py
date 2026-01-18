@@ -30,13 +30,19 @@ class TranscriptionProvider(Protocol):
 class VideoAnalyzer(Protocol):
     """Protocol for AI-powered video analysis (e.g., Gemini)."""
 
-    def analyze(self, video_path: Path, transcript: Transcript) -> EditDecisionList:
+    def analyze(
+        self,
+        video_path: Path,
+        transcript: Transcript,
+        user_instructions: str | None = None,
+    ) -> EditDecisionList:
         """
         Analyze video content and decide which segments to keep/remove.
 
         Args:
             video_path: Path to video file
             transcript: Transcript with word-level timestamps
+            user_instructions: Optional user guidance
 
         Returns:
             EditDecisionList with keep/remove decisions.

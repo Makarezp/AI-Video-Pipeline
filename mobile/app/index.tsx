@@ -214,11 +214,13 @@ export default function HomeScreen() {
                                 >
                                     <View style={styles.thumbnailPlaceholder}>
                                         <Text style={styles.thumbnailEmoji}>
-                                            {project.status === 'analyzing' ? '⏳' : '🎞️'}
+                                            {project.status === 'analyzing' || project.status === 'created' ? '⏳' : '🎞️'}
                                         </Text>
-                                        {project.status === 'analyzing' && (
+                                        {(project.status === 'analyzing' || project.status === 'created') && (
                                             <View style={styles.analyzingBadge}>
-                                                <Text style={styles.analyzingText}>Analyzing...</Text>
+                                                <Text style={styles.analyzingText}>
+                                                    {project.status === 'analyzing' ? 'Analyzing...' : 'Waiting'}
+                                                </Text>
                                             </View>
                                         )}
                                     </View>
@@ -249,7 +251,7 @@ export default function HomeScreen() {
                 <View style={[styles.loadingOverlay, StyleSheet.absoluteFill]}>
                     <View style={styles.loadingCard}>
                         <Text style={styles.loadingEmoji}>🚀</Text>
-                        <Text style={styles.loadingText}>Uploading Video...</Text>
+                        <Text style={styles.loadingText}>Uploading...</Text>
                         <Text style={styles.loadingSubtext}>This will just take a moment</Text>
                     </View>
                 </View>

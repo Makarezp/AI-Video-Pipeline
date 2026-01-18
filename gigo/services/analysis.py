@@ -43,7 +43,10 @@ class AnalysisService:
         self._long_video_threshold = long_video_threshold
 
     async def analyze_async(
-        self, video_path: Path, transcript: Transcript
+        self,
+        video_path: Path,
+        transcript: Transcript,
+        user_instructions: str | None = None,
     ) -> EditDecisionList:
         """
         Analyze video asynchronously.
@@ -53,6 +56,7 @@ class AnalysisService:
         Args:
             video_path: Path to video file
             transcript: Transcript with word-level timestamps
+            user_instructions: Optional user guidance
 
         Returns:
             EditDecisionList with keep/remove decisions
@@ -68,10 +72,16 @@ class AnalysisService:
 
         try:
             if transcript.duration > self._long_video_threshold:
-                return await self._analyze_parallel(compressed_path, transcript, loop)
+                return await self._analyze_parallel(
+                    compressed_path, transcript, loop, user_instructions
+                )
             else:
                 return await loop.run_in_executor(
-                    None, self._analyzer.analyze, compressed_path, transcript
+                    None,
+                    self._analyzer.analyze,
+                    compressed_path,
+                    transcript,
+                    user_instructions,
                 )
         finally:
             if compressed_path != video_path:
@@ -82,6 +92,7 @@ class AnalysisService:
         video_path: Path,
         transcript: Transcript,
         loop: asyncio.AbstractEventLoop,
+        user_instructions: str | None = None,
     ) -> EditDecisionList:
         """Analyze long video using parallel chunking."""
         logger.info(
@@ -110,7 +121,11 @@ class AnalysisService:
 
             tasks.append(
                 loop.run_in_executor(
-                    None, self._analyzer.analyze, chunk_path, chunk_transcript
+                    None,
+                    self._analyzer.analyze,
+                    chunk_path,
+                    chunk_transcript,
+                    user_instructions,
                 )
             )
 
@@ -130,9 +145,16 @@ class AnalysisService:
 
         return final_edl
 
-    def analyze(self, video_path: Path, transcript: Transcript) -> EditDecisionList:
+    def analyze(
+        self,
+        video_path: Path,
+        transcript: Transcript,
+        user_instructions: str | None = None,
+    ) -> EditDecisionList:
         """Sync wrapper for analyze_async."""
-        return asyncio.run(self.analyze_async(video_path, transcript))
+        return asyncio.run(
+            self.analyze_async(video_path, transcript, user_instructions)
+        )
 
     def _merge_results(
         self,
