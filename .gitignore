@@ -32,3 +32,6 @@ gemini_response_*.txt
 
 # Project Storage (local data)
 gigo/storage/
+
+# System
+.DS_Store
