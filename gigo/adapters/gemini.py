@@ -87,17 +87,48 @@ class GeminiVideoAnalyzer:
 
         # Call Gemini
         logger.info("Analyzing with Gemini...")
+
+        # Determine MIME type based on extension
+        ext = video_path.suffix.lower()
+        mime_type = "video/mp4"
+        if ext == ".mov":
+            mime_type = "video/quicktime"
+        elif ext == ".avi":
+            mime_type = "video/x-msvideo"
+        elif ext == ".mkv":
+            mime_type = "video/x-matroska"
+        elif ext in [".m4v", ".mp4", ".m4p"]:
+            mime_type = "video/mp4"
+
         response = self._client.models.generate_content(
             model=self._model,
             contents=[
                 types.Part.from_uri(
                     file_uri=video_file.uri or "",
-                    mime_type=video_file.mime_type or "video/mp4",
+                    mime_type=video_file.mime_type or mime_type,
                 ),
                 prompt,
             ],
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
+                safety_settings=[
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                        threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                        threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                        threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                        threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                ],
             ),
         )
 

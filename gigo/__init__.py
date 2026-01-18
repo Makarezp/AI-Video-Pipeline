@@ -1,17 +1,17 @@
 """GarbageInGoldOut - Semantic Video Distillery"""
 
-from .core.pipeline import process_video, VideoPipeline, ProcessingResult
+from .factory import create_orchestrator
 from .core.models import (
     Transcript,
     EditDecisionList,
     KeepSegment,
     WordSegment,
 )
+from .core.orchestrator import VideoOrchestrator
 
 __all__ = [
-    "process_video",
-    "VideoPipeline",
-    "ProcessingResult",
+    "create_orchestrator",
+    "VideoOrchestrator",
     "Transcript",
     "EditDecisionList",
     "KeepSegment",

@@ -8,8 +8,7 @@ from .models import (
     RenderingService,
 )
 from .rendering import FFmpegRenderingService
-from .hybrid import HybridVideoService
-from .pipeline import VideoPipeline, ProcessingResult, process_video
+from .orchestrator import VideoOrchestrator
 
 __all__ = [
     # Models
@@ -21,9 +20,5 @@ __all__ = [
     "RenderingService",
     # Services
     "FFmpegRenderingService",
-    "HybridVideoService",
-    # Pipeline
-    "VideoPipeline",
-    "ProcessingResult",
-    "process_video",
+    "VideoOrchestrator",
 ]

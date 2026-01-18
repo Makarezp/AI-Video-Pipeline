@@ -7,6 +7,7 @@ Consolidates all FFmpeg operations from hybrid.py and rendering.py.
 
 import json
 import logging
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -160,8 +161,10 @@ class FFmpegVideoProcessor:
         chunks = []
         start = 0.0
 
-        # Create temp dir for chunks
+        # Create temp dir for chunks - clean existing first
         temp_dir = video_path.parent / "chunks"
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)
         temp_dir.mkdir(exist_ok=True)
 
         # Add None for the last segment (goes to end)
