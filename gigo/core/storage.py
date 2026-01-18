@@ -29,9 +29,13 @@ class FileSystemProjectRepository:
         dest_video_path = project_dir / f"source{source_path.suffix}"
         shutil.copy2(source_path, dest_video_path)
 
+        # Extract video metadata
+        ffmpeg = FFmpegVideoProcessor()
+        duration = ffmpeg.get_duration(dest_video_path)
+        logger.info(f"Video duration: {duration:.2f}s")
+
         # Generate thumbnails synchronously
         thumbnails_dir = project_dir / "thumbnails"
-        ffmpeg = FFmpegVideoProcessor()
         thumbnail_count = ffmpeg.extract_thumbnails(dest_video_path, thumbnails_dir)
         logger.info(f"Generated {thumbnail_count} thumbnails for project {project_id}")
 
@@ -44,6 +48,7 @@ class FileSystemProjectRepository:
             source_video_path=str(dest_video_path),
             thumbnail_path=str(thumbnails_dir),
             thumbnail_count=thumbnail_count,
+            duration=duration,
         )
         self._save_metadata(project_dir, metadata)
 

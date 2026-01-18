@@ -288,6 +288,35 @@ class FFmpegVideoProcessor:
         stream = data["streams"][0]
         return stream["width"], stream["height"]
 
+    def get_duration(self, video_path: Path) -> float:
+        """
+        Get video duration in seconds using ffprobe.
+
+        Args:
+            video_path: Path to video file
+
+        Returns:
+            Duration in seconds.
+        """
+        cmd = [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "json",
+            str(video_path),
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            logger.error(f"ffprobe duration failed: {result.stderr}")
+            return 0.0
+
+        data = json.loads(result.stdout)
+        return float(data.get("format", {}).get("duration", 0.0))
+
     def render_segments(
         self,
         video_path: Path,

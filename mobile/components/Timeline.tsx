@@ -122,29 +122,44 @@ export default function Timeline({
         }
     }, [onSeek, duration]);
 
+    // Sync playback position to scroll (when not scrubbing)
+    // Using a ref to track scrubbing state on JS thread
+    const isScrubbingRef = React.useRef(false);
+
+    // Helper to update scrubbing ref from UI thread
+    const setScrubbingRef = useCallback((value: boolean) => {
+        isScrubbingRef.current = value;
+    }, []);
+
     // Animated scroll handler (runs on UI thread)
     const scrollHandler = useAnimatedScrollHandler({
         onBeginDrag: () => {
             isScrubbing.value = true;
+            runOnJS(setScrubbingRef)(true); // Immediate update to JS thread
         },
         onScroll: (event) => {
             scrollX.value = event.contentOffset.x;
-            const time = event.contentOffset.x / PIXELS_PER_SECOND;
-            runOnJS(performSeek)(time);
+            // Only seek when user is actively dragging (not during programmatic scroll)
+            if (isScrubbing.value) {
+                const time = event.contentOffset.x / PIXELS_PER_SECOND;
+                runOnJS(performSeek)(time);
+            }
         },
         onEndDrag: () => {
             // Keep scrubbing true during momentum
         },
         onMomentumEnd: () => {
             isScrubbing.value = false;
+            runOnJS(setScrubbingRef)(false); // Immediate update to JS thread
         },
     });
 
-    // Sync playback to scroll (when not scrubbing)
+    // Sync scroll position to playback time using native scrollTo
     useEffect(() => {
-        if (!isScrubbing.value) {
+        if (!isScrubbingRef.current && scrollRef.current) {
             const targetX = currentTime * PIXELS_PER_SECOND;
-            scrollTo(scrollRef, targetX, 0, false);
+            // Use animated: false for instant updates (video sends 60fps updates)
+            (scrollRef.current as any).scrollTo?.({ x: targetX, animated: false });
         }
     }, [currentTime]);
 

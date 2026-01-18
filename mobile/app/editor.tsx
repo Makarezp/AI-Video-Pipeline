@@ -296,6 +296,7 @@ export default function EditorScreen() {
                         resizeMode={ResizeMode.CONTAIN}
                         shouldPlay={false}
                         isLooping={false}
+                        progressUpdateIntervalMillis={16}
                         onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
                     />
 
