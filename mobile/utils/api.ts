@@ -119,8 +119,79 @@ export async function renderVideo(videoPath: string, timeline: Timeline): Promis
 /**
  * Get download URL for a rendered video
  */
+/**
+ * Get download URL for a rendered video
+ */
 export function getDownloadUrl(outputPath: string): string {
     // Extract just the filename from the full path
     const filename = outputPath.split('/').pop() || outputPath;
     return `${API_BASE}/video/${encodeURIComponent(filename)}`;
+}
+
+
+// ===========================================
+// PROJECT API
+// ===========================================
+
+export interface ProjectMetadata {
+    id: string;
+    name: string;
+    status: 'analyzing' | 'ready' | 'failed';
+    created_at: string;
+    duration: number;
+    thumbnail_path: string;
+    source_video_path: string;
+}
+
+export async function listProjects(): Promise<ProjectMetadata[]> {
+    const response = await fetch(`${API_BASE}/projects`);
+    if (!response.ok) {
+        throw new Error(`Failed to list projects: ${response.status}`);
+    }
+    return response.json();
+}
+
+export async function createProject(uri: string, filename: string): Promise<ProjectMetadata> {
+    const formData = new FormData();
+    // @ts-ignore
+    formData.append('file', {
+        uri,
+        type: 'video/mp4',
+        name: filename,
+    });
+
+    const response = await fetch(`${API_BASE}/projects`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to create project: ${response.status}`);
+    }
+    return response.json();
+}
+
+export async function getProject(projectId: string): Promise<ProjectMetadata> {
+    const response = await fetch(`${API_BASE}/projects/${projectId}`);
+    if (!response.ok) throw new Error(`Fetch project failed: ${response.status}`);
+    return response.json();
+}
+
+export async function getProjectTimeline(projectId: string): Promise<Timeline | null> {
+    const response = await fetch(`${API_BASE}/projects/${projectId}/edl`);
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(`Fetch EDL failed: ${response.status}`);
+    return response.json();
+}
+
+export async function updateProjectTimeline(projectId: string, timeline: Timeline): Promise<void> {
+    const response = await fetch(`${API_BASE}/projects/${projectId}/edl`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(timeline),
+    });
+    if (!response.ok) throw new Error(`Auto-save failed: ${response.status}`);
 }

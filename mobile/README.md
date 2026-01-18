@@ -4,13 +4,14 @@ The mobile companion app for **Garbage In, Gold Out**, built with Expo and React
 
 ## 🚀 Features
 
-- **Video Selection**: Pick existing videos from your library or record new ones directly.
-- **AI Analysis Pipeline**: Integrated progress tracking for upload and Gemini-powered analysis.
-- **Custom Timeline Editor**: 
+- **Project Library**: A persistent dashboard to manage and resume multiple editing sessions.
+- **Background AI Pipeline**: Upload videos and return to the dashboard immediately; analysis happens in the background.
+- **Auto-Save Editor**: 
+  - **Persistent State**: Changes are automatically synced to the backend as you edit.
   - **Visual Feedback**: Green segments for "keep", red for "remove".
   - **Interactive**: Tap any segment to toggle its status before rendering.
-  - **Integrated Player**: Custom `expo-av` player synced with the timeline.
-- **Server Rendering**: Trigger the final FFmpeg render on the backend and get notified when it's ready.
+  - **Integrated Player**: Custom `expo-av` player synced with the scrubber timeline.
+- **One-Tap Export**: Render final localized videos on the backend and save directly to your device gallery.
 
 ## 🛠 Tech Stack
 
@@ -70,10 +71,10 @@ To test on a physical phone, the app needs to reach your computer's local IP add
 ```bash
 mobile/
 ├── app/                  # Expo Router screens
-│   ├── _layout.tsx       # Root layout & theme
-│   ├── index.tsx         # Home (Video selection)
-│   ├── upload.tsx        # Processing progress
-│   └── editor.tsx        # Timeline editor
+│   ├── _layout.tsx       # Root layout & theme (Dark Mode)
+│   ├── index.tsx         # Project Dashboard (Library list)
+│   ├── upload.tsx        # Background upload logic
+│   └── editor.tsx        # Project-aware timeline editor
 ├── components/           # UI Components
 │   └── Timeline.tsx      # Custom Interactive Timeline
 ├── utils/                # Logic & Helpers

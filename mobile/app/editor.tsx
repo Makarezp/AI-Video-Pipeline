@@ -8,7 +8,7 @@
  * - Gradient render button
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { StyleSheet, View, TouchableOpacity, Text, Alert, Dimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
@@ -17,37 +17,97 @@ import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
 import Timeline from '../components/Timeline';
-import { TimelineSegment, Timeline as TimelineType, getVideoUrl, renderVideo, getDownloadUrl } from '../utils/api';
+import {
+    TimelineSegment,
+    Timeline as TimelineType,
+    getVideoUrl,
+    renderVideo,
+    getDownloadUrl,
+    getProject,
+    getProjectTimeline,
+    updateProjectTimeline,
+    ProjectMetadata
+} from '../utils/api';
 import { colors, gradients, typography, spacing, radii, shadows } from '../utils/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function EditorScreen() {
-    const params = useLocalSearchParams<{
-        videoPath: string;
-        timeline: string;
-        edlFile: string;
-    }>();
-
+    const { projectId } = useLocalSearchParams<{ projectId: string }>();
     const router = useRouter();
     const videoRef = useRef<Video>(null);
 
-    const [timeline, setTimeline] = useState<TimelineType>(() => {
-        try {
-            return JSON.parse(params.timeline || '{}');
-        } catch {
-            return { segments: [], original_duration: 0 };
-        }
-    });
-
+    const [project, setProject] = useState<ProjectMetadata | null>(null);
+    const [timeline, setTimeline] = useState<TimelineType>({ segments: [], original_duration: 0 });
+    const [isLoading, setIsLoading] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [isRendering, setIsRendering] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Get video URL
-    const videoFilename = params.videoPath?.split('/').pop() || '';
-    const videoUrl = getVideoUrl(videoFilename);
+    // Initial Load & Polling
+    useEffect(() => {
+        if (!projectId) return;
+
+        let isMounted = true;
+        let timeoutId: NodeJS.Timeout;
+
+        const loadData = async () => {
+            try {
+                const proj = await getProject(projectId);
+
+                if (!isMounted) return;
+                setProject(proj);
+
+                if (proj.status === 'ready') {
+                    const edl = await getProjectTimeline(projectId);
+                    if (isMounted && edl) {
+                        setTimeline(edl);
+                        setIsLoading(false);
+                    }
+                } else if (proj.status === 'failed') {
+                    Alert.alert('Analysis Failed', 'The AI analysis could not complete.');
+                    setIsLoading(false);
+                } else {
+                    // Still analyzing - schedule next poll
+                    setIsLoading(true);
+                    timeoutId = setTimeout(loadData, 3000);
+                }
+            } catch (error) {
+                console.error('Failed to load project:', error);
+                if (isMounted) {
+                    Alert.alert('Error', 'Failed to load project');
+                }
+            }
+        };
+
+        loadData();
+
+        return () => {
+            isMounted = false;
+            clearTimeout(timeoutId);
+        };
+    }, [projectId]);
+
+    // Auto-save when timeline changes
+    const handleToggleSegment = async (index: number) => {
+        if (!project) return;
+
+        const newSegments = [...timeline.segments];
+        const segment = newSegments[index];
+        segment.action = segment.action === 'keep' ? 'remove' : 'keep';
+
+        const newTimeline = { ...timeline, segments: newSegments };
+        setTimeline(newTimeline);
+
+        // Optimistic update + Fire & Forget save
+        updateProjectTimeline(projectId, newTimeline).catch(err => {
+            console.error('Auto-save failed:', err);
+        });
+    };
+
+    // Video URL from project source (ensure project is loaded)
+    const videoUrl = project ? getVideoUrl(project.source_video_path) : '';
 
     const handlePlaybackStatusUpdate = useCallback((status: AVPlaybackStatus) => {
         if (status.isLoaded) {
@@ -58,7 +118,6 @@ export default function EditorScreen() {
 
     const togglePlayPause = async () => {
         if (!videoRef.current) return;
-
         if (isPlaying) {
             await videoRef.current.pauseAsync();
         } else {
@@ -69,15 +128,6 @@ export default function EditorScreen() {
     const handleSeek = async (time: number) => {
         if (!videoRef.current) return;
         await videoRef.current.setPositionAsync(time * 1000);
-    };
-
-    const handleToggleSegment = (index: number) => {
-        setTimeline(prev => {
-            const newSegments = [...prev.segments];
-            const segment = newSegments[index];
-            segment.action = segment.action === 'keep' ? 'remove' : 'keep';
-            return { ...prev, segments: newSegments };
-        });
     };
 
     const saveToGallery = async (outputPath: string) => {
@@ -112,18 +162,27 @@ export default function EditorScreen() {
     };
 
     const handleRender = async () => {
-        if (!params.videoPath) return;
+        if (!project) return;
 
         setIsRendering(true);
         try {
-            const result = await renderVideo(params.videoPath, timeline);
+            // Re-use renderVideo but pass source path from project
+            // Note: renderVideo expects path relative to project root or absolute?
+            // API expects `video_path`. Backend handles it.
+            // Project `source_video_path` is absolute path on server.
+            // But `renderVideo` (API) expects filename usually?
+            // Wait, storage logic saves full path: `source_video_path=dest_video_path` (absolute).
+            // Backend `render_video` takes `request.video_path` and `Path(request.video_path)`.
+            // So absolute path works if on same machine.
+
+            const result = await renderVideo(project.source_video_path, timeline);
 
             if (result.success && result.output_path) {
                 Alert.alert(
                     '✅ Render Complete',
                     'Your edited video is ready! Would you like to save it to your gallery?',
                     [
-                        { text: 'No Thanks', style: 'cancel', onPress: () => router.replace('/') },
+                        { text: 'No Thanks', style: 'cancel' },
                         {
                             text: '📱 Save to Gallery',
                             onPress: async () => {
@@ -131,15 +190,10 @@ export default function EditorScreen() {
                                     await saveToGallery(result.output_path!);
                                     Alert.alert(
                                         '✅ Saved!',
-                                        'Video saved to your gallery in the "GIGO" album.',
-                                        [{ text: 'OK', onPress: () => router.replace('/') }]
+                                        'Video saved to your gallery in the "GIGO" album.'
                                     );
                                 } catch (error) {
-                                    Alert.alert(
-                                        'Save Failed',
-                                        error instanceof Error ? error.message : 'Could not save video',
-                                        [{ text: 'OK', onPress: () => router.replace('/') }]
-                                    );
+                                    Alert.alert('Save Failed', 'Could not save video');
                                 }
                             }
                         }

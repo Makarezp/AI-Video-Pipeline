@@ -11,16 +11,28 @@ gigo/
 ├── adapters/          # Infrastructure (FFmpeg, Whisper, Gemini)
 ├── services/          # Domain logic (Transcription, Analysis, Timeline)
 ├── core/              # Models, Protocols, Orchestrator
+├── storage/           # File-based Project Repository
 ├── prompts/           # Externalized AI prompts
 ├── config.py          # Centralized configuration
 └── factory.py         # Dependency injection
 ```
 
 ### The Pipeline
-1. **Whisper** → Word-level timestamps from audio
-2. **Smart Chunking** → Semantic splits via Gemini Flash
-3. **Parallel Analysis** → Concurrent Gemini 3 analysis
-4. **Hardware Rendering** → Apple Silicon encoder (`h264_videotoolbox`)
+1. **Project Library** → Persistent file-based storage of sessions
+2. **Whisper** → Word-level timestamps from audio
+3. **Smart Chunking** → Semantic splits via Gemini Flash
+4. **Parallel Analysis** → Concurrent Gemini 3 analysis
+5. **Mobile Editor** → Persistent timeline state & background rendering
+
+## 📡 API Endpoints
+
+- `POST /projects` - Upload video & start background analysis
+- `GET /projects` - List all projects
+- `GET /projects/{id}` - Get project status & metadata
+- `GET /projects/{id}/edl` - Get interactive timeline
+- `PATCH /projects/{id}/edl` - Auto-save timeline changes
+- `GET /video/{path}` - Stream source video
+- `POST /render` - Render final video from timeline
 
 ## 🛠️ Setup
 

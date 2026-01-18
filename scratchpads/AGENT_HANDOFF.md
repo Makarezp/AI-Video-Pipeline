@@ -76,12 +76,21 @@ mobile/
 - [x] Hardware-Accelerated Rendering (`h264_videotoolbox`)
 - [x] **Gemini Stability**: Safety settings (`BLOCK_NONE`) & robust MIME detection
 
+### Project Persistence (Local DB)
+- [x] **Local Repository**: File-based storage in `gigo/storage/projects/`
+- [x] **API Endpoints**: CRUD for projects, background analysis, auto-save (`PUT/PATCH`)
+- [x] **Project Metadata**: `project.json` stores status, path, duration
+
 ### Mobile App (Expo SDK 52)
-- [x] **Home Screen**: Pick video from library or record new
-- [x] **Upload Screen**: Progress bar for upload + AI analysis
-- [x] **Editor Screen**: Professional scrubber timeline (Fixed Playhead)
-- [x] **Timeline Component**: 60fps Reanimated interactions with proportional scaling
-- [x] **Save to Gallery**: Download rendered video to device Photos (GIGO album)
+- [x] **Dashboard**: Persistent list of projects with status (Analyzing/Ready)
+- [x] **Upload**: Background uploads + Immediate redirect to dashboard
+- [x] **Editor**: 
+    - Loads persistent projects by ID
+    - Auto-saves edits to backend
+    - Polls for analysis completion (Stop-on-Ready optimization)
+    - Full-screen video playback of source media
+- [x] **Timeline Component**: 60fps Reanimated interactions
+- [x] **Save to Gallery**: Download rendered video to device Photos
 
 ---
 

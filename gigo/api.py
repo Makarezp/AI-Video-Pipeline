@@ -14,25 +14,39 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
+import logging
+
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from gigo.core.models import EditDecisionList, InteractiveEDL, KeepSegment
+from gigo.config import default_config
+from gigo.core.models import (
+    EditDecisionList,
+    InteractiveEDL,
+    KeepSegment,
+    ProjectMetadata,
+)
 from gigo.core.rendering import FFmpegRenderingService
+from gigo.core.storage import FileSystemProjectRepository
 from gigo.factory import create_orchestrator
 from gigo.services.timeline import TimelineService
 
 # Load environment variables
 load_dotenv()
 
+logger = logging.getLogger("gigo.api")
+
 app = FastAPI(
     title="GIGO API",
     description="Human-in-the-Loop Video Editing API",
     version="0.1.0",
 )
+
+# Initialize persistence layer
+repository = FileSystemProjectRepository(default_config.projects_dir)
 
 # CORS for local development
 app.add_middleware(
@@ -60,6 +74,37 @@ class RenderResponse(BaseModel):
     success: bool
     output_path: Optional[str] = None
     error: Optional[str] = None
+
+
+def run_project_analysis(project_id: str):
+    """
+    Background task to run Orchestrator analysis for a project.
+    Updates project status and saves result to storage.
+    """
+    try:
+        project = repository.get_project(project_id)
+        if not project:
+            return
+
+        logger.info(f"Starting background analysis for project {project_id}")
+
+        # Initialize orchestrator
+        orchestrator = create_orchestrator()
+
+        # Run analysis
+        source_path = Path(project.source_video_path)
+        edl = orchestrator.process(source_path)
+
+        # Save EDL
+        repository.save_edl(project.id, edl)
+
+        # Update status
+        repository.update_status(project.id, "ready")
+        logger.info(f"Analysis complete for project {project_id}")
+
+    except Exception as e:
+        logger.error(f"Analysis failed for project {project_id}: {e}")
+        repository.update_status(project_id, "failed")
 
 
 @app.get("/")
@@ -284,6 +329,85 @@ def render_video(request: RenderRequest):
 
     except Exception as e:
         return RenderResponse(success=False, error=str(e))
+
+
+# =============================================================================
+# PROJECT ENDPOINTS
+# =============================================================================
+
+
+@app.post("/projects", response_model=ProjectMetadata)
+async def create_project(
+    background_tasks: BackgroundTasks, file: UploadFile = File(...)
+):
+    """
+    Create a new project from uploaded video.
+    Starts analysis in background.
+    """
+    # Save to temp
+    temp_path = PROJECT_ROOT / f"temp_{file.filename}"
+    try:
+        # Validate file
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No filename provided")
+
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Create project
+        project = repository.create_project_from_file(temp_path)
+
+        # Clean up temp
+        temp_path.unlink()
+
+        # Trigger background analysis
+        background_tasks.add_task(run_project_analysis, project.id)
+
+        return project
+
+    except Exception as e:
+        if temp_path.exists():
+            temp_path.unlink()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/projects", response_model=list[ProjectMetadata])
+def list_projects():
+    """List all persistent projects."""
+    return repository.list_projects()
+
+
+@app.get("/projects/{project_id}", response_model=ProjectMetadata)
+def get_project(project_id: str):
+    """Get project metadata."""
+    project = repository.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return project
+
+
+@app.get("/projects/{project_id}/edl", response_model=InteractiveEDL)
+def get_project_edl(project_id: str):
+    """Get interactive timeline for a project."""
+    edl = repository.get_edl(project_id)
+    if not edl:
+        raise HTTPException(status_code=404, detail="EDL not found (analysis pending?)")
+
+    # Convert to interactive
+    service = TimelineService()
+    return service.get_interactive_timeline(edl)
+
+
+@app.patch("/projects/{project_id}/edl")
+def update_project_edl(project_id: str, timeline: InteractiveEDL):
+    """Update project status (Auto-save)."""
+    # Convert back to EditDecisionList (keeps only)
+    edl = timeline.to_edit_decision_list()
+    try:
+        repository.save_edl(project_id, edl)
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

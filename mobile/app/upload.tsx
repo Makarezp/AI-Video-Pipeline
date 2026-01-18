@@ -13,7 +13,7 @@ import { StyleSheet, Text, View, Animated, TouchableOpacity, Image } from 'react
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { uploadVideo, analyzeVideo, AnalyzeResponse } from '../utils/api';
+import { createProject, AnalyzeResponse } from '../utils/api';
 import { colors, gradients, typography, spacing, radii } from '../utils/theme';
 
 type ProcessingStep = 'upload' | 'transcribe' | 'analyze' | 'done' | 'error';
@@ -85,39 +85,20 @@ export default function UploadScreen() {
         try {
             const filename = `video_${Date.now()}.mp4`;
 
-            // Step 1: Upload
+            // Step 1: Upload & Create Project
             setCurrentStep('upload');
-            setProgress(15);
+            setProgress(10);
 
-            const uploadResult = await uploadVideo(uri, filename);
-            setProgress(30);
+            // This uploads and triggers background analysis
+            await createProject(uri, filename);
 
-            // Step 2: Transcribe (part of analyze on backend, but shown as step)
-            setCurrentStep('transcribe');
-            setProgress(45);
-
-            // Step 3: Analyze
-            setCurrentStep('analyze');
-            setProgress(60);
-
-            const analyzeResult = await analyzeVideo(uploadResult.filename);
             setProgress(100);
-
-            // Done!
             setCurrentStep('done');
-            setResult(analyzeResult);
 
-            // Navigate to editor
+            // Navigate back to Dashboard (Home)
             setTimeout(() => {
-                router.replace({
-                    pathname: '/editor',
-                    params: {
-                        videoPath: analyzeResult.video_path,
-                        timeline: JSON.stringify(analyzeResult.timeline),
-                        edlFile: analyzeResult.edl_file,
-                    },
-                });
-            }, 1500);
+                router.replace('/');
+            }, 1000);
 
         } catch (err) {
             console.error('Processing error:', err);

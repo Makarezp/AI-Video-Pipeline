@@ -74,8 +74,14 @@ class GIGOConfig:
     # Logging
     log_dir: Path = field(default_factory=lambda: Path(__file__).parent.parent / "logs")
 
+    # Storage
+    projects_dir: Path = field(
+        default_factory=lambda: Path(__file__).parent / "storage" / "projects"
+    )
+
     def __post_init__(self):
         self.log_dir.mkdir(exist_ok=True)
+        self.projects_dir.mkdir(parents=True, exist_ok=True)
 
 
 # Default configuration instance

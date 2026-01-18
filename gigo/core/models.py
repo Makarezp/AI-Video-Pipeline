@@ -155,3 +155,20 @@ class RenderingService(Protocol):
     def render(
         self, video_path: Path, edl: EditDecisionList, output_path: Path
     ) -> Path: ...
+
+
+# =============================================================================
+# PERSISTENCE MODELS
+# =============================================================================
+
+
+class ProjectMetadata(BaseModel):
+    """Metadata for a video project."""
+
+    id: str
+    name: str = "Untitled Project"
+    status: str = "analyzing"  # analyzing, ready, failed
+    created_at: str
+    duration: float = 0.0
+    thumbnail_path: str = ""
+    source_video_path: str = ""

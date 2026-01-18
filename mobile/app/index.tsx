@@ -8,14 +8,15 @@
  * - Floating tab navigation
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, gradients, typography, spacing, radii, shadows } from '../utils/theme';
 import TabBar, { TabItem } from '../components/TabBar';
+import { listProjects, ProjectMetadata } from '../utils/api';
 
 const TABS: TabItem[] = [
     { id: 'home', icon: '🏠', label: 'Home' },
@@ -26,6 +27,26 @@ const TABS: TabItem[] = [
 export default function HomeScreen() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('home');
+    const [projects, setProjects] = useState<ProjectMetadata[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useFocusEffect(
+        useCallback(() => {
+            loadProjects();
+        }, [])
+    );
+
+    const loadProjects = async () => {
+        setIsLoading(true);
+        try {
+            const data = await listProjects();
+            setProjects(data);
+        } catch (error) {
+            console.error('Failed to load projects:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const pickVideo = async () => {
         try {
@@ -153,16 +174,51 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Recent Projects Section */}
+                {/* Projects List */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Recent Projects</Text>
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyStateIcon}>🎬</Text>
-                        <Text style={styles.emptyStateText}>No projects yet</Text>
-                        <Text style={styles.emptyStateHint}>
-                            Start a new project to see it here
-                        </Text>
-                    </View>
+                    <Text style={styles.sectionTitle}>Your Projects</Text>
+
+                    {projects.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <Text style={styles.emptyStateIcon}>🎬</Text>
+                            <Text style={styles.emptyStateText}>No projects yet</Text>
+                            <Text style={styles.emptyStateHint}>
+                                Start a new project to see it here
+                            </Text>
+                        </View>
+                    ) : (
+                        <View style={styles.projectsGrid}>
+                            {projects.map((project) => (
+                                <TouchableOpacity
+                                    key={project.id}
+                                    style={styles.projectCard}
+                                    onPress={() => router.push({
+                                        pathname: '/editor',
+                                        params: { projectId: project.id }
+                                    })}
+                                >
+                                    <View style={styles.thumbnailPlaceholder}>
+                                        <Text style={styles.thumbnailEmoji}>
+                                            {project.status === 'analyzing' ? '⏳' : '🎞️'}
+                                        </Text>
+                                        {project.status === 'analyzing' && (
+                                            <View style={styles.analyzingBadge}>
+                                                <Text style={styles.analyzingText}>Analyzing...</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                    <View style={styles.projectInfo}>
+                                        <Text style={styles.projectTitle} numberOfLines={1}>
+                                            {project.name}
+                                        </Text>
+                                        <Text style={styles.projectDate}>
+                                            {new Date(project.created_at).toLocaleDateString()}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
                 </View>
             </ScrollView>
 
@@ -306,5 +362,57 @@ const styles = StyleSheet.create({
     emptyStateHint: {
         fontSize: typography.fontSize.sm,
         color: colors.textMuted,
+    },
+    projectsGrid: {
+        gap: spacing.md,
+    },
+    projectCard: {
+        flexDirection: 'row',
+        backgroundColor: colors.bgSecondary,
+        borderRadius: radii.lg,
+        padding: spacing.sm,
+        alignItems: 'center',
+    },
+    thumbnailPlaceholder: {
+        width: 64,
+        height: 64,
+        borderRadius: radii.md,
+        backgroundColor: colors.bgTertiary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+    },
+    thumbnailEmoji: {
+        fontSize: 24,
+    },
+    analyzingBadge: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        paddingVertical: 2,
+        borderBottomLeftRadius: radii.md,
+        borderBottomRightRadius: radii.md,
+    },
+    analyzingText: {
+        color: colors.textPrimary,
+        fontSize: 8,
+        textAlign: 'center',
+        fontWeight: 'bold',
+    },
+    projectInfo: {
+        marginLeft: spacing.md,
+        flex: 1,
+    },
+    projectTitle: {
+        color: colors.textPrimary,
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.semibold,
+        marginBottom: 2,
+    },
+    projectDate: {
+        color: colors.textMuted,
+        fontSize: typography.fontSize.xs,
     },
 });
