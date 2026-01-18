@@ -89,4 +89,15 @@ If you get a `PHPhotosErrorDomain` error when dragging videos to the simulator, 
 ```bash
 ffmpeg -i input.mp4 -vf "scale=1280:-2" -c:v libx264 -pix_fmt yuv420p output.mp4
 ```
-Then drag `output.mp4` into the simulator.
+
+## 🤖 Automated Agent Verification
+
+The project is configured with an **MCP Server** for the iOS Simulator. This allows the AI agent to:
+1. Connect to the running simulator.
+2. Inspect the UI hierarchy.
+3. Perform touch interactions (swipe, tap).
+4. Verify bugs and fixes autonomously (e.g., verifying scroll bounds).
+
+**Prerequisites**:
+- `idb-companion` (brew) and `fb-idb` (pip) installed.
+- Agent configured with `ios-simulator-mcp`.

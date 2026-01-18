@@ -61,6 +61,17 @@ mobile/
 
 ---
 
+## 🤖 Agent Verification Capabilities
+
+The agent has configured access to the **iOS Simulator MCP Server**. This allows autonomous verification of mobile app features:
+- **UI Inspection**: reading accessibility trees (`ui_describe_all`).
+- **Interaction**: simulating taps, swipes, and text input.
+- **Visual Verification**: capturing screenshots for validaton.
+
+**Configuration**: `~/.gemini/antigravity/mcp_config.json` (configured with `idb` path).
+
+---
+
 ## ✅ What's Done
 
 ### Clean Architecture Refactoring
