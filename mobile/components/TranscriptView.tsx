@@ -95,10 +95,10 @@ export default function TranscriptView({
 const styles = StyleSheet.create({
     container: {
         backgroundColor: colors.bgSecondary,
-        marginHorizontal: spacing.base,
+        // marginHorizontal: spacing.base, // Removed for edge-to-edge
         marginBottom: spacing.base,
-        borderRadius: radii.md,
-        overflow: 'hidden',
+        // borderRadius: radii.md, // Removed for edge-to-edge
+        // overflow: 'hidden',
     },
     header: {
         flexDirection: 'row',

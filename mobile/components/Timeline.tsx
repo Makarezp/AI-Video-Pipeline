@@ -32,7 +32,7 @@ import { TimelineSegment, getThumbnailUrl } from '../utils/api';
 import { colors, typography, spacing, radii } from '../utils/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CONTAINER_MARGIN = spacing.base * 2; // Left + Right margin
+const CONTAINER_MARGIN = 0; // Edge to edge
 const CONTAINER_WIDTH = SCREEN_WIDTH - CONTAINER_MARGIN;
 const CENTER_OFFSET = CONTAINER_WIDTH / 2;
 const PIXELS_PER_SECOND = 50; // Zoom level
@@ -341,10 +341,10 @@ export default function Timeline({
 const styles = StyleSheet.create({
     container: {
         backgroundColor: colors.bgSecondary,
-        borderRadius: radii.lg,
-        marginHorizontal: spacing.base,
+        // borderRadius removed for edge-to-edge
+        // marginHorizontal removed for edge-to-edge
         marginVertical: spacing.sm,
-        overflow: 'hidden',
+        // overflow: 'hidden', // Not strictly needed if no borderRadius, but good for safety
     },
     header: {
         flexDirection: 'row',
