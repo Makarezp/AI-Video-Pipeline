@@ -11,11 +11,12 @@ import {
     TouchableOpacity,
     Text,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radii, shadows } from '../utils/theme';
 
 export interface TabItem {
     id: string;
-    icon: string;
+    iconName: keyof typeof Ionicons.glyphMap;
     label: string;
 }
 
@@ -39,9 +40,12 @@ export default function TabBar({ tabs, activeTab, onTabPress, style }: TabBarPro
                             onPress={() => onTabPress(tab.id)}
                             activeOpacity={0.7}
                         >
-                            <Text style={[styles.icon, isActive && styles.iconActive]}>
-                                {tab.icon}
-                            </Text>
+                            <Ionicons
+                                name={tab.iconName}
+                                size={20}
+                                color={isActive ? colors.accentPrimary : colors.iconInactive}
+                                style={{ marginBottom: 4 }}
+                            />
                             <Text style={[styles.label, isActive && styles.labelActive]}>
                                 {tab.label}
                             </Text>
@@ -66,38 +70,28 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
-        backgroundColor: colors.bgSecondary,
-        borderRadius: radii.pill,
+        backgroundColor: colors.bgSecondary, // Solid pro background
+        borderRadius: radii.xl, // Sharper
         paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.lg,
-        // Glassmorphism effect
-        borderWidth: 1,
-        borderColor: colors.overlayLight,
+        paddingHorizontal: spacing.md,
         ...shadows.lg,
     },
     tab: {
         alignItems: 'center',
         paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.sm,
-        borderRadius: radii.pill,
+        paddingVertical: spacing.xs,
+        borderRadius: radii.lg,
     },
     tabActive: {
-        backgroundColor: colors.bgTertiary,
+        backgroundColor: colors.bgTertiary, // Subtle highlight
     },
-    icon: {
-        fontSize: 22,
-        marginBottom: spacing.xs,
-        opacity: 0.6,
-    },
-    iconActive: {
-        opacity: 1,
-    },
+    // Removed old icon styles as we pass props to Ionicons directly
     label: {
-        fontSize: 11,
+        fontSize: 10,
         color: colors.textSecondary,
         fontWeight: '500',
     },
     labelActive: {
-        color: colors.accentPrimary,
+        color: colors.textPrimary, // White text for active
     },
 });

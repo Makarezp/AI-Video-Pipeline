@@ -11,11 +11,12 @@ import {
     TouchableOpacity,
     Text,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radii, shadows } from '../utils/theme';
 
 export interface ToolbarAction {
     id: string;
-    icon: string;
+    iconName: keyof typeof Ionicons.glyphMap;
     label: string;
     onPress: () => void;
     disabled?: boolean;
@@ -43,15 +44,12 @@ export default function BottomToolbar({ actions, style }: BottomToolbarProps) {
                         disabled={action.disabled}
                         activeOpacity={0.7}
                     >
-                        <Text
-                            style={[
-                                styles.icon,
-                                action.active && styles.iconActive,
-                                action.disabled && styles.iconDisabled,
-                            ]}
-                        >
-                            {action.icon}
-                        </Text>
+                        <Ionicons
+                            name={action.iconName}
+                            size={24}
+                            color={action.disabled ? colors.iconInactive : (action.active ? colors.accentPrimary : colors.icon)}
+                            style={{ marginBottom: 4 }}
+                        />
                         <Text
                             style={[
                                 styles.label,
@@ -78,13 +76,11 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         alignItems: 'center',
         backgroundColor: colors.bgSecondary,
-        borderRadius: radii.xl,
+        borderRadius: radii.xl, // Sharper than pill
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
-        // Glassmorphism effect
-        borderWidth: 1,
-        borderColor: colors.overlayLight,
-        ...shadows.md,
+        // Removed glassmorphism border
+        ...shadows.lg,
     },
     button: {
         alignItems: 'center',

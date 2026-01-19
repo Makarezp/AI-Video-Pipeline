@@ -22,6 +22,7 @@ import {
     TouchableWithoutFeedback,
     Keyboard
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -260,14 +261,20 @@ export default function EditorScreen() {
                     style={styles.headerButton}
                     onPress={() => router.back()}
                 >
-                    <Text style={styles.headerButtonText}>✕</Text>
+                    <Ionicons name="close" size={24} color={colors.textPrimary} />
                 </TouchableOpacity>
 
                 <View style={styles.headerStats}>
                     {isLoading || showCalibration ? (
                         <View style={[styles.statBadge, { backgroundColor: colors.bgTertiary }]}>
+                            <Ionicons
+                                name={showCalibration ? 'construct' : 'aperture'}
+                                size={14}
+                                color={colors.textSecondary}
+                                style={{ marginRight: 6 }}
+                            />
                             <Text style={styles.statBadgeText}>
-                                {showCalibration ? '🛠️ Calibration' : '🤖 Analyzing...'}
+                                {showCalibration ? 'Calibration' : 'Analyzing...'}
                             </Text>
                         </View>
                     ) : null}
@@ -318,7 +325,7 @@ export default function EditorScreen() {
                     >
                         {!isPlaying && (
                             <View style={styles.playButton}>
-                                <Text style={styles.playIcon}>▶</Text>
+                                <Ionicons name="play" size={32} color={colors.textPrimary} style={{ marginLeft: 4 }} />
                             </View>
                         )}
                     </TouchableOpacity>

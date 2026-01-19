@@ -14,14 +14,15 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, gradients, typography, spacing, radii, shadows } from '../utils/theme';
 import TabBar, { TabItem } from '../components/TabBar';
 import { listProjects, ProjectMetadata, createProject } from '../utils/api';
 
 const TABS: TabItem[] = [
-    { id: 'home', icon: '🏠', label: 'Home' },
-    { id: 'templates', icon: '✨', label: 'Templates' },
-    { id: 'profile', icon: '👤', label: 'Profile' },
+    { id: 'home', iconName: 'home', label: 'Home' },
+    { id: 'templates', iconName: 'albums', label: 'Templates' },
+    { id: 'profile', iconName: 'person', label: 'Profile' },
 ];
 
 export default function HomeScreen() {
@@ -126,18 +127,17 @@ export default function HomeScreen() {
             Alert.alert('Coming Soon', 'Profile feature is under development.');
         }
     };
-
     return (
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.logoContainer}>
                     <Text style={styles.logoG}>G</Text>
-                    <Text style={styles.logoLightning}>⚡</Text>
+                    <Ionicons name="flash" size={20} color={colors.accentGold} style={{ marginHorizontal: -2 }} />
                     <Text style={styles.logoGO}>GO</Text>
                 </View>
                 <TouchableOpacity style={styles.settingsButton}>
-                    <Text style={styles.settingsIcon}>⚙️</Text>
+                    <Ionicons name="settings-outline" size={24} color={colors.textSecondary} />
                 </TouchableOpacity>
             </View>
 
@@ -156,7 +156,7 @@ export default function HomeScreen() {
                         style={styles.newProjectGradient}
                     >
                         <View style={styles.newProjectInner}>
-                            <Text style={styles.plusIcon}>+</Text>
+                            <Ionicons name="add" size={48} color={colors.textSecondary} style={{ marginBottom: spacing.sm }} />
                             <Text style={styles.newProjectText}>New Project</Text>
                         </View>
                     </LinearGradient>
@@ -166,14 +166,14 @@ export default function HomeScreen() {
                 <View style={styles.quickActions}>
                     <TouchableOpacity style={styles.quickAction} onPress={pickVideo}>
                         <View style={styles.quickActionIcon}>
-                            <Text style={styles.quickActionEmoji}>📁</Text>
+                            <Ionicons name="folder-open-outline" size={28} color={colors.textPrimary} />
                         </View>
                         <Text style={styles.quickActionText}>Import</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.quickAction} onPress={recordVideo}>
                         <View style={styles.quickActionIcon}>
-                            <Text style={styles.quickActionEmoji}>🎥</Text>
+                            <Ionicons name="videocam-outline" size={28} color={colors.textPrimary} />
                         </View>
                         <Text style={styles.quickActionText}>Record</Text>
                     </TouchableOpacity>
@@ -183,7 +183,7 @@ export default function HomeScreen() {
                         onPress={() => Alert.alert('Coming Soon', 'Drafts feature is under development.')}
                     >
                         <View style={styles.quickActionIcon}>
-                            <Text style={styles.quickActionEmoji}>📝</Text>
+                            <Ionicons name="document-text-outline" size={28} color={colors.textPrimary} />
                         </View>
                         <Text style={styles.quickActionText}>Drafts</Text>
                     </TouchableOpacity>
@@ -195,7 +195,7 @@ export default function HomeScreen() {
 
                     {projects.length === 0 ? (
                         <View style={styles.emptyState}>
-                            <Text style={styles.emptyStateIcon}>🎬</Text>
+                            <Ionicons name="film-outline" size={48} color={colors.textMuted} style={{ marginBottom: spacing.base }} />
                             <Text style={styles.emptyStateText}>No projects yet</Text>
                             <Text style={styles.emptyStateHint}>
                                 Start a new project to see it here
@@ -213,9 +213,11 @@ export default function HomeScreen() {
                                     })}
                                 >
                                     <View style={styles.thumbnailPlaceholder}>
-                                        <Text style={styles.thumbnailEmoji}>
-                                            {project.status === 'analyzing' || project.status === 'created' ? '⏳' : '🎞️'}
-                                        </Text>
+                                        <Ionicons
+                                            name={project.status === 'analyzing' || project.status === 'created' ? "hourglass-outline" : "images-outline"}
+                                            size={24}
+                                            color={colors.textSecondary}
+                                        />
                                         {(project.status === 'analyzing' || project.status === 'created') && (
                                             <View style={styles.analyzingBadge}>
                                                 <Text style={styles.analyzingText}>
@@ -250,7 +252,7 @@ export default function HomeScreen() {
             {isUploading && (
                 <View style={[styles.loadingOverlay, StyleSheet.absoluteFill]}>
                     <View style={styles.loadingCard}>
-                        <Text style={styles.loadingEmoji}>🚀</Text>
+                        <Ionicons name="cloud-upload-outline" size={48} color={colors.accentPrimary} style={{ marginBottom: spacing.md }} />
                         <Text style={styles.loadingText}>Uploading...</Text>
                         <Text style={styles.loadingSubtext}>This will just take a moment</Text>
                     </View>
@@ -352,12 +354,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.sm,
-        borderWidth: 1,
-        borderColor: colors.overlayLight,
+        // Removed border
     },
-    quickActionEmoji: {
-        fontSize: 28,
-    },
+    // quickActionEmoji removed
     quickActionText: {
         fontSize: typography.fontSize.sm,
         color: colors.textSecondary,
@@ -377,11 +376,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.bgSecondary,
         borderRadius: radii.xl,
     },
-    emptyStateIcon: {
-        fontSize: 48,
-        marginBottom: spacing.base,
-        opacity: 0.5,
-    },
+    // emptyStateIcon removed
     emptyStateText: {
         fontSize: typography.fontSize.base,
         color: colors.textSecondary,
@@ -410,9 +405,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         position: 'relative',
     },
-    thumbnailEmoji: {
-        fontSize: 24,
-    },
+    // thumbnailEmoji removed
     analyzingBadge: {
         position: 'absolute',
         bottom: 0,
@@ -456,10 +449,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         ...shadows.lg,
     },
-    loadingEmoji: {
-        fontSize: 48,
-        marginBottom: spacing.md,
-    },
+    // loadingEmoji removed
     loadingText: {
         fontSize: typography.fontSize.lg,
         fontWeight: typography.fontWeight.bold,

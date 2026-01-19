@@ -10,30 +10,34 @@
 
 export const colors = {
     // Backgrounds
-    bgPrimary: '#0D0D0D',      // Main app background
-    bgSecondary: '#1A1A1A',    // Cards, containers
-    bgTertiary: '#2A2A2A',     // Timeline track, inputs
-    bgElevated: '#333333',     // Elevated elements, hover states
+    bgPrimary: '#050505',      // Deep black
+    bgSecondary: '#121212',    // Professional card bg
+    bgTertiary: '#1E1E1E',     // Inputs, tracks
+    bgElevated: '#252525',     // Hovers, modals
 
     // Accent Colors
-    accentPrimary: '#00D4FF',   // Primary actions, active states (cyan)
-    accentSecondary: '#A855F7', // Gradients, highlights (purple)
-    accentGold: '#FFD700',      // Premium actions, render button
+    accentPrimary: '#3B82F6',   // High-vis Blue (Standard Pro)
+    accentSecondary: '#8B5CF6', // Purple (Creative)
+    accentGold: '#FFD700',      // Gold (Keep/Premium)
 
     // Semantic Colors
-    success: '#22C55E',         // Keep segments, positive actions
-    danger: '#EF4444',          // Remove segments, destructive actions
-    warning: '#F59E0B',         // Warnings, cautions
-    info: '#3B82F6',            // Information, tips
+    success: '#10B981',         // Green (Subtle)
+    danger: '#EF4444',          // Red
+    warning: '#F59E0B',         // Amber
+    info: '#3B82F6',            // Blue
 
     // Text Colors
-    textPrimary: '#FFFFFF',     // Headings, primary text
-    textSecondary: '#888888',   // Labels, hints
-    textMuted: '#555555',       // Disabled states, placeholders
+    textPrimary: '#F2F2F2',     // Off-white (easier on eyes)
+    textSecondary: '#A1A1AA',   // Light grey
+    textMuted: '#52525B',       // Dark grey
+
+    // Icon Colors
+    icon: '#E4E4E7',
+    iconInactive: '#52525B',
 
     // Overlay Colors
-    overlay: 'rgba(0, 0, 0, 0.6)',        // Modal overlays
-    overlayLight: 'rgba(255, 255, 255, 0.1)', // Glass effect
+    overlay: 'rgba(0, 0, 0, 0.8)',
+    overlayLight: 'rgba(255, 255, 255, 0.05)', // Very subtle
 } as const;
 
 // ============================================================================
@@ -116,12 +120,12 @@ export const spacing = {
 
 export const radii = {
     none: 0,
-    sm: 4,
-    md: 8,
-    lg: 12,
-    xl: 16,
-    '2xl': 20,
-    '3xl': 24,
+    sm: 2,
+    md: 4,
+    lg: 8,   // Sharper
+    xl: 12,  // Sharper
+    '2xl': 16,
+    '3xl': 20,
     pill: 999,
 } as const;
 
