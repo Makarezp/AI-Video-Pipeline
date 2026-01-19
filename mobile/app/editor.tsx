@@ -270,16 +270,7 @@ export default function EditorScreen() {
                                 {showCalibration ? '🛠️ Calibration' : '🤖 Analyzing...'}
                             </Text>
                         </View>
-                    ) : (
-                        <>
-                            <View style={styles.statBadge}>
-                                <Text style={styles.statBadgeText}>✓ {keepCount}</Text>
-                            </View>
-                            <View style={[styles.statBadge, styles.statBadgeDanger]}>
-                                <Text style={styles.statBadgeText}>✕ {removeCount}</Text>
-                            </View>
-                        </>
-                    )}
+                    ) : null}
                 </View>
 
                 <TouchableOpacity

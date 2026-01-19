@@ -197,14 +197,7 @@ export default function Timeline({
             <View style={styles.header}>
                 <Text style={styles.currentTimeText}>{formatTime(currentTime)}</Text>
                 <Text style={styles.durationText}>/ {formatTime(duration)}</Text>
-                <View style={styles.statsRow}>
-                    <View style={[styles.statBadge, { backgroundColor: colors.success }]}>
-                        <Text style={styles.statText}>✓{keepCount}</Text>
-                    </View>
-                    <View style={[styles.statBadge, { backgroundColor: colors.danger }]}>
-                        <Text style={styles.statText}>✕{removeCount}</Text>
-                    </View>
-                </View>
+
             </View>
 
             {/* Timeline scrubber */}
