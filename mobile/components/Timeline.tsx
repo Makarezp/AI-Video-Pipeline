@@ -259,6 +259,11 @@ export default function Timeline({
                                 const segmentWidth = (segment.end - segment.start) * PIXELS_PER_SECOND;
                                 const segmentLeft = segment.start * PIXELS_PER_SECOND;
 
+                                // Visual Gap Logic:
+                                // Reduce width by 2px to create a gap between continuous segments
+                                const GAP_SIZE = 2;
+                                const displayWidth = Math.max(segmentWidth - GAP_SIZE, 2);
+
                                 return (
                                     <TouchableOpacity
                                         key={index}
@@ -266,22 +271,21 @@ export default function Timeline({
                                             styles.segmentBlock,
                                             {
                                                 left: segmentLeft,
-                                                width: Math.max(segmentWidth, 4),
-                                                backgroundColor: isKeep ? 'rgba(0, 255, 0, 0.05)' : 'rgba(0, 0, 0, 0.7)', // Ghosting for Remove, subtle tint for Keep
+                                                width: displayWidth,
+                                                backgroundColor: isKeep ? 'rgba(0, 255, 0, 0.05)' : 'rgba(0, 0, 0, 0.7)',
+                                                borderRadius: 6, // Rounded "Clip" look
                                             }
                                         ]}
                                         onPress={() => onToggleSegment(index)}
                                         activeOpacity={0.9}
                                     >
-                                        {/* Traffic Light Line */}
+                                        {/* Traffic Light Line - also rounded at top */}
                                         <View style={{
                                             height: 4,
                                             width: '100%',
                                             backgroundColor: isKeep ? colors.success : colors.danger,
                                             marginTop: 0,
                                         }} />
-
-                                        {/* Optional Repetitive Icon overlay could go here, but Ghosting might be enough */}
                                     </TouchableOpacity>
                                 );
                             })}
@@ -360,7 +364,7 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.bold,
     },
     scrubberContainer: {
-        height: 80, // Compacted from 120
+        height: 100, // Increased for visibility
         position: 'relative',
     },
     playhead: {
@@ -407,7 +411,7 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     thumbnailsTrack: {
-        height: 50,
+        height: 70,
         borderRadius: radii.sm,
         position: 'absolute',
         top: 20,
@@ -416,14 +420,14 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     thumbnail: {
-        height: 50,
+        height: 70,
     },
     thumbnailPlaceholder: {
-        height: 50,
+        height: 70,
         backgroundColor: colors.bgTertiary,
     },
     segmentsTrack: {
-        height: 50,
+        height: 70,
         borderRadius: radii.sm,
         position: 'absolute',
         top: 20, // Sync with thumbnailsTrack
