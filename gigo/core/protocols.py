@@ -69,6 +69,24 @@ class ChunkAnalyzer(Protocol):
         ...
 
 
+class PunctuationRestorer(Protocol):
+    """Protocol for restoring punctuation in transcripts."""
+
+    def restore_punctuation(self, transcript: Transcript) -> Transcript:
+        """
+        Add punctuation and capitalization to a transcript.
+
+        Must preserve exact word count and timing.
+
+        Args:
+            transcript: Raw transcript from speech-to-text
+
+        Returns:
+            Transcript with punctuated text.
+        """
+        ...
+
+
 class VideoProcessor(Protocol):
     """Protocol for video processing operations (e.g., FFmpeg)."""
 

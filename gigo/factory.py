@@ -11,7 +11,11 @@ from google import genai
 from openai import OpenAI
 
 from gigo.adapters.ffmpeg import FFmpegVideoProcessor
-from gigo.adapters.gemini import GeminiChunkAnalyzer, GeminiVideoAnalyzer
+from gigo.adapters.gemini import (
+    GeminiChunkAnalyzer,
+    GeminiPunctuationRestorer,
+    GeminiVideoAnalyzer,
+)
 from gigo.adapters.whisper import WhisperTranscriptionAdapter
 from gigo.config import GIGOConfig, default_config
 from gigo.core.orchestrator import VideoOrchestrator
@@ -75,6 +79,11 @@ def create_orchestrator(
         prompt_template=config.gemini.chunking_prompt,
     )
 
+    punctuation_restorer = GeminiPunctuationRestorer(
+        client=gemini_client,
+        model="gemini-2.0-flash-lite",  # Use the latest lite model
+    )
+
     # Create services
     transcription_service = TranscriptionService(
         provider=whisper,
@@ -93,6 +102,7 @@ def create_orchestrator(
     # Create and return orchestrator
     return VideoOrchestrator(
         transcription_service=transcription_service,
+        punctuation_restorer=punctuation_restorer,
         analysis_service=analysis_service,
         timeline_service=timeline_service,
     )

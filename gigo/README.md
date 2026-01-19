@@ -21,8 +21,9 @@ gigo/
 1. **Project Library** → Persistent file-based storage of sessions
 2. **Whisper** → Word-level timestamps from audio
 3. **Calibration** → Apps can provide user instructions to guide editing
-4. **Smart Chunking** → Semantic splits via Gemini Flash
-5. **Parallel Analysis** → Concurrent Gemini 3 analysis
+4. **Punctuation Restoration** → LLM-based punctuation via Gemini Flash
+5. **Smart Chunking** → Semantic splits via Gemini Flash
+6. **Parallel Analysis** → Concurrent Gemini 3 analysis
 5. **Mobile Editor** → Persistent timeline state & background rendering
 
 ## 📡 API Endpoints

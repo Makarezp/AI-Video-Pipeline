@@ -8,6 +8,7 @@ This is the refactored version of HybridVideoService.
 import logging
 from pathlib import Path
 
+from gigo.core.protocols import PunctuationRestorer
 from gigo.core.models import EditDecisionList, InteractiveEDL, Transcript
 from gigo.services.transcription import TranscriptionService
 from gigo.services.analysis import AnalysisService
@@ -22,8 +23,9 @@ class VideoOrchestrator:
 
     Coordinates:
     1. Transcription (Whisper)
-    2. Analysis (Gemini)
-    3. Timeline conversion
+    2. Punctuation Restoration (Gemini)
+    3. Analysis (Gemini)
+    4. Timeline conversion
 
     This is a thin coordinator - all heavy lifting is done by services.
     """
@@ -31,6 +33,7 @@ class VideoOrchestrator:
     def __init__(
         self,
         transcription_service: TranscriptionService,
+        punctuation_restorer: PunctuationRestorer,
         analysis_service: AnalysisService,
         timeline_service: TimelineService,
     ):
@@ -39,10 +42,12 @@ class VideoOrchestrator:
 
         Args:
             transcription_service: Service for transcription workflow
+            punctuation_restorer: Service for punctuation restoration
             analysis_service: Service for video analysis
             timeline_service: Service for timeline operations
         """
         self._transcription = transcription_service
+        self._punctuation_restorer = punctuation_restorer
         self._analysis = analysis_service
         self._timeline = timeline_service
 
@@ -63,14 +68,18 @@ class VideoOrchestrator:
         logger.info(f"Starting analysis of {video_path.name}")
 
         # Step 1: Transcribe
-        logger.info("[1/2] Transcribing with Whisper...")
+        logger.info("[1/3] Transcribing with Whisper...")
         transcript = self._transcription.transcribe_video(video_path)
         logger.info(
             f"      Found {len(transcript.segments)} words in {transcript.duration:.1f}s"
         )
 
-        # Step 2: Analyze
-        logger.info("[2/2] Analyzing with Gemini...")
+        # Step 2: Restore Punctuation
+        logger.info("[2/3] Restoring punctuation with Gemini...")
+        transcript = self._punctuation_restorer.restore_punctuation(transcript)
+
+        # Step 3: Analyze
+        logger.info("[3/3] Analyzing with Gemini...")
         edl = await self._analysis.analyze_async(
             video_path, transcript, user_instructions
         )

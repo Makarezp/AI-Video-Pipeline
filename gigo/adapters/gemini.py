@@ -18,6 +18,7 @@ from gigo.core.models import (
     KeepSegment,
     TimelineSegment,
     Transcript,
+    WordSegment,
 )
 
 logger = logging.getLogger("gigo.adapters.gemini")
@@ -415,3 +416,111 @@ class GeminiChunkAnalyzer:
                 f"Smart splitting failed: {e}. Falling back to fixed chunks."
             )
             return []
+
+
+class GeminiPunctuationRestorer:
+    """
+    Punctuation restoration using Google Gemini 1.5 Flash.
+    """
+
+    def __init__(
+        self,
+        client: genai.Client,
+        model: str = "gemini-1.5-flash-8b-latest",  # Use the cheapest model
+    ):
+        """
+        Initialize punctuation restorer.
+
+        Args:
+            client: Configured Gemini client instance
+            model: Model name to use (default: 8b flash)
+        """
+        self._client = client
+        self._model = model
+
+    def restore_punctuation(self, transcript: Transcript) -> Transcript:
+        """
+        Restore punctuation using Gemini.
+        """
+        if not transcript.segments:
+            return transcript
+
+        # 1. Prepare text payload
+        words = [seg.word for seg in transcript.segments]
+        text_payload = json.dumps(words)
+
+        # 2. Build Prompt
+        prompt = (
+            "You are a Punctuation Restoration expert. \n"
+            "I will provide a JSON list of words from a speech-to-text transcript. \n"
+            "Your task is to restore standard punctuation (periods, commas, question marks) "
+            "and capitalization to the words. \n"
+            "CRITICAL RULES:\n"
+            "1. You MUST return a JSON list of strings.\n"
+            "2. The output list MUST have EXACTLY the same number of items as the input.\n"
+            "3. You must NOT add, remove, or reorder any words.\n"
+            "4. Only modify casing and append punctuation stamps to existing words.\n"
+            "5. Do NOT output markdown code blocks. valid JSON only.\n\n"
+            f"INPUT WORDS: {text_payload}"
+        )
+
+        try:
+            # 3. Call Gemini
+            # We use a lower temperature for deterministic formatting
+            response = self._client.models.generate_content(
+                model=self._model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1,
+                ),
+            )
+
+            # 4. Parse Response
+            content = response.text or ""
+            if content.startswith("```json"):
+                content = content[7:-3].strip()
+            elif content.startswith("```"):
+                content = content[3:-3].strip()
+
+            punctuated_words = json.loads(content)
+
+            # 5. Validate & Apply
+            if not isinstance(punctuated_words, list):
+                logger.error("Gemini Punctuation: Response is not a list")
+                return transcript
+
+            if len(punctuated_words) != len(transcript.segments):
+                logger.error(
+                    f"Gemini Punctuation: Length mismatch. In: {len(transcript.segments)}, Out: {len(punctuated_words)}. Skipping."
+                )
+                return transcript
+
+            # Apply changes
+            new_segments = []
+            for i, seg in enumerate(transcript.segments):
+                # Only take the word itself, keeping original timing
+                new_word = punctuated_words[i]
+                new_segments.append(
+                    WordSegment(
+                        word=new_word,
+                        start=seg.start,
+                        end=seg.end,
+                        confidence=seg.confidence,
+                    )
+                )
+
+            # Re-generate full text
+            new_full_text = " ".join(s.word for s in new_segments)
+
+            logger.info("Successfully restored punctuation with Gemini Flash 8B")
+
+            return Transcript(
+                segments=new_segments,
+                full_text=new_full_text,
+                duration=transcript.duration,
+            )
+
+        except Exception as e:
+            logger.error(f"Punctuation restoration failed: {e}")
+            return transcript

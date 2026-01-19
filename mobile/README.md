@@ -14,6 +14,9 @@ The mobile companion app for **Garbage In, Gold Out**, built with Expo and React
   - **Visual Feedback**: Green/red border frames for "keep"/"remove" segments.
   - **Interactive**: Tap any segment to toggle its status before rendering.
   - **Integrated Player**: Custom `expo-av` player synced with the scrubber timeline.
+- **Bi-Directional Transcript**:
+  - **Auto-Scroll**: Transcript automatically scrolls to follow the video playback ("Teleprompter" mode).
+  - **Sync-Seek**: Scrubbing the transcript seeks the video to the exact sentence.
 - **One-Tap Export**: Render final localized videos on the backend and save directly to your device gallery.
 
 ## 🛠 Tech Stack
