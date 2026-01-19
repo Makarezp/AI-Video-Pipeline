@@ -306,31 +306,31 @@ export default function Timeline({
             {/* Current segment info */}
             {currentSegment && (
                 <View style={styles.segmentInfoContainer}>
-                    {/* Context Text Wrapper for Centering */}
+                    {/* Context Text Wrapper */}
                     <View style={styles.textWrapper}>
-                        <Ionicons
-                            name={currentSegment.action === 'keep' ? "sparkles" : "cut"}
-                            size={16}
-                            color={currentSegment.action === 'keep' ? "#FFD700" : colors.textMuted}
-                            style={{ marginRight: 6, marginTop: 2 }}
-                        />
-                        <Text style={styles.segmentReasonText}>
+                        <Text
+                            style={[
+                                styles.segmentReasonText,
+                                // Dim text if excluded
+                                currentSegment.action !== 'keep' && { color: colors.textSecondary }
+                            ]}
+                        >
                             {currentSegment.reason || `Segment ${currentSegmentIndex + 1}`}
                         </Text>
                     </View>
 
+                    {/* Visibility Toggle */}
                     <TouchableOpacity
                         onPress={() => currentSegmentIndex >= 0 && onToggleSegment(currentSegmentIndex)}
                         activeOpacity={0.6}
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                        style={styles.ghostButton}
+                        style={styles.visibilityButton}
                     >
-                        <Text style={[
-                            styles.ghostButtonText,
-                            { color: currentSegment.action === 'keep' ? colors.danger : colors.accentPrimary }
-                        ]}>
-                            {currentSegment.action === 'keep' ? 'Exclude' : 'Include'}
-                        </Text>
+                        <Ionicons
+                            name={currentSegment.action === 'keep' ? "eye" : "eye-off"}
+                            size={24}
+                            color={currentSegment.action === 'keep' ? colors.textPrimary : colors.textMuted}
+                        />
                     </TouchableOpacity>
                 </View>
             )}
@@ -465,15 +465,10 @@ const styles = StyleSheet.create({
         color: colors.textSecondary,
         textAlign: 'left',
     },
-    ghostButton: {
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xs,
-    },
-    ghostButtonText: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.bold,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
+    visibilityButton: {
+        padding: spacing.sm,
+        backgroundColor: colors.bgTertiary,
+        borderRadius: radii.md,
     },
     segmentHint: {
         fontSize: typography.fontSize.xs,
