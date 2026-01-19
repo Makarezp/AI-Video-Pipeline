@@ -266,13 +266,23 @@ export default function Timeline({
                                             styles.segmentBlock,
                                             {
                                                 left: segmentLeft,
-                                                width: Math.max(segmentWidth, 4), // Min width
-                                                borderColor: isKeep ? colors.success : colors.danger,
+                                                width: Math.max(segmentWidth, 4),
+                                                backgroundColor: isKeep ? 'rgba(0, 255, 0, 0.05)' : 'rgba(0, 0, 0, 0.7)', // Ghosting for Remove, subtle tint for Keep
                                             }
                                         ]}
                                         onPress={() => onToggleSegment(index)}
-                                        activeOpacity={0.8}
-                                    />
+                                        activeOpacity={0.9}
+                                    >
+                                        {/* Traffic Light Line */}
+                                        <View style={{
+                                            height: 4,
+                                            width: '100%',
+                                            backgroundColor: isKeep ? colors.success : colors.danger,
+                                            marginTop: 0,
+                                        }} />
+
+                                        {/* Optional Repetitive Icon overlay could go here, but Ghosting might be enough */}
+                                    </TouchableOpacity>
                                 );
                             })}
                         </View>
@@ -350,7 +360,7 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeight.bold,
     },
     scrubberContainer: {
-        height: 120, // Compacted from 160/180
+        height: 80, // Compacted from 120
         position: 'relative',
     },
     playhead: {
@@ -397,35 +407,34 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     thumbnailsTrack: {
-        height: 80,
+        height: 50,
         borderRadius: radii.sm,
         position: 'absolute',
-        top: 25, // Tighter margin (was 40/60)
+        top: 20,
         left: 0,
         flexDirection: 'row',
         overflow: 'hidden',
     },
     thumbnail: {
-        height: 80,
+        height: 50,
     },
     thumbnailPlaceholder: {
-        height: 80,
+        height: 50,
         backgroundColor: colors.bgTertiary,
     },
     segmentsTrack: {
-        height: 80,
+        height: 50,
         borderRadius: radii.sm,
         position: 'absolute',
-        top: 25, // Sync with thumbnailsTrack
+        top: 20, // Sync with thumbnailsTrack
         left: 0,
     },
     segmentBlock: {
         position: 'absolute',
         top: 0,
         bottom: 0,
-        borderRadius: radii.sm,
-        borderWidth: 3,
-        backgroundColor: 'transparent',
+        borderRadius: radii.sm, // Keep radius
+        overflow: 'hidden', // Ensure tint/overlay respects radius
     },
     segmentInfo: {
         padding: spacing.base,

@@ -274,10 +274,20 @@ export default function EditorScreen() {
                 </View>
 
                 <TouchableOpacity
-                    style={styles.headerButton}
-                    onPress={() => Alert.alert('Settings', 'Editor settings coming soon.')}
+                    onPress={handleRender}
+                    disabled={isRendering || isSaving || isLoading}
+                    activeOpacity={0.8}
                 >
-                    <Text style={styles.headerButtonText}>⚙️</Text>
+                    <LinearGradient
+                        colors={isRendering || isSaving || isLoading ? [colors.bgTertiary, colors.bgTertiary] : gradients.gold}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.headerExportButton}
+                    >
+                        <Text style={styles.headerExportText}>
+                            {isLoading ? 'Wait...' : isRendering ? 'Rendering' : isSaving ? 'Saving' : 'Export'}
+                        </Text>
+                    </LinearGradient>
                 </TouchableOpacity>
             </View>
 
@@ -362,26 +372,7 @@ export default function EditorScreen() {
                             />
                         )}
 
-                        {/* Render Button */}
-                        <View style={styles.footer}>
-                            <TouchableOpacity
-                                style={styles.renderButton}
-                                onPress={handleRender}
-                                disabled={isRendering || isSaving || isLoading}
-                                activeOpacity={0.9}
-                            >
-                                <LinearGradient
-                                    colors={isRendering || isSaving || isLoading ? [colors.bgTertiary, colors.bgTertiary] : gradients.gold}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 0 }}
-                                    style={styles.renderButtonGradient}
-                                >
-                                    <Text style={styles.renderButtonText}>
-                                        {isLoading ? '🤖 Analyzing Video...' : isRendering ? '⏳ Rendering...' : isSaving ? '💾 Saving...' : '🎬 Export Video'}
-                                    </Text>
-                                </LinearGradient>
-                            </TouchableOpacity>
-                        </View>
+
                     </>
                 )}
             </KeyboardAvoidingView>
@@ -459,25 +450,7 @@ const styles = StyleSheet.create({
         fontSize: 32,
         marginLeft: 6,
     },
-    footer: {
-        padding: spacing.base,
-        paddingBottom: spacing.sm,
-    },
-    renderButton: {
-        borderRadius: radii.xl,
-        overflow: 'hidden',
-        ...shadows.lg,
-    },
-    renderButtonGradient: {
-        paddingVertical: spacing.lg,
-        alignItems: 'center',
-        borderRadius: radii.xl,
-    },
-    renderButtonText: {
-        fontSize: typography.fontSize.lg,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.bgPrimary,
-    },
+
     calibrationContainer: {
         flex: 1,
         padding: spacing.lg,
@@ -525,5 +498,17 @@ const styles = StyleSheet.create({
     closeIcon: {
         color: colors.textSecondary,
         fontSize: 20,
+    },
+    headerExportButton: {
+        paddingHorizontal: spacing.md,
+        paddingVertical: 8,
+        borderRadius: radii.pill,
+        minWidth: 80,
+        alignItems: 'center',
+    },
+    headerExportText: {
+        color: colors.bgPrimary,
+        fontWeight: typography.fontWeight.bold,
+        fontSize: typography.fontSize.sm,
     },
 });
