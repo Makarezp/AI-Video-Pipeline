@@ -17,7 +17,10 @@ import {
     Text,
     Dimensions,
     Image,
+    Switch,
+    Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
     useSharedValue,
     useAnimatedScrollHandler,
@@ -194,10 +197,12 @@ export default function Timeline({
     return (
         <View style={styles.container}>
             {/* Header with time display */}
+            {/* Header with Classic Minimalist Timer */}
             <View style={styles.header}>
-                <Text style={styles.currentTimeText}>{formatTime(currentTime)}</Text>
-                <Text style={styles.durationText}>/ {formatTime(duration)}</Text>
-
+                <Text style={styles.timeCodeText}>
+                    {formatTime(currentTime)}
+                    <Text style={styles.durationCodeText}> / {formatTime(duration)}</Text>
+                </Text>
             </View>
 
             {/* Timeline scrubber */}
@@ -298,25 +303,36 @@ export default function Timeline({
             </View>
 
             {/* Current segment info */}
+            {/* Current segment info */}
             {currentSegment && (
-                <TouchableOpacity
-                    style={styles.segmentInfo}
-                    onPress={() => currentSegmentIndex >= 0 && onToggleSegment(currentSegmentIndex)}
-                    activeOpacity={0.8}
-                >
-                    <View style={[
-                        styles.segmentBadge,
-                        { backgroundColor: currentSegment.action === 'keep' ? colors.success : colors.danger }
-                    ]}>
-                        <Text style={styles.segmentBadgeText}>
-                            {currentSegment.action === 'keep' ? '✓ Keep' : '✕ Remove'}
+                <View style={styles.segmentInfoContainer}>
+                    {/* Context Text Wrapper for Centering */}
+                    <View style={styles.textWrapper}>
+                        <Ionicons
+                            name={currentSegment.action === 'keep' ? "sparkles" : "cut"}
+                            size={16}
+                            color={currentSegment.action === 'keep' ? "#FFD700" : colors.textMuted}
+                            style={{ marginRight: 6, marginTop: 2 }}
+                        />
+                        <Text style={styles.segmentReasonText}>
+                            {currentSegment.reason || `Segment ${currentSegmentIndex + 1}`}
                         </Text>
                     </View>
-                    <Text style={styles.segmentReasonText} numberOfLines={2}>
-                        {currentSegment.reason || `Segment ${currentSegmentIndex + 1}`}
-                    </Text>
-                    <Text style={styles.segmentHint}>Tap to toggle</Text>
-                </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={() => currentSegmentIndex >= 0 && onToggleSegment(currentSegmentIndex)}
+                        activeOpacity={0.6}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        style={styles.ghostButton}
+                    >
+                        <Text style={[
+                            styles.ghostButtonText,
+                            { color: currentSegment.action === 'keep' ? colors.danger : colors.accentPrimary }
+                        ]}>
+                            {currentSegment.action === 'keep' ? 'Exclude' : 'Include'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             )}
         </View>
     );
@@ -333,35 +349,21 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: spacing.base,
+        justifyContent: 'center',
         paddingVertical: spacing.sm,
-        gap: spacing.xs,
+        paddingBottom: 0,
     },
-    currentTimeText: {
-        fontSize: typography.fontSize.lg,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.accentPrimary,
-        fontFamily: typography.fontFamily.mono,
-    },
-    durationText: {
-        fontSize: typography.fontSize.md,
-        color: colors.textSecondary,
-        fontFamily: typography.fontFamily.mono,
-        flex: 1,
-    },
-    statsRow: {
-        flexDirection: 'row',
-        gap: spacing.xs,
-    },
-    statBadge: {
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 2,
-        borderRadius: radii.sm,
-    },
-    statText: {
-        fontSize: typography.fontSize.xs,
+    // Classic Minimalist Timer Styles
+    timeCodeText: {
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+        fontSize: typography.fontSize.sm, // Slightly larger than before
+        fontWeight: '600',
         color: colors.textPrimary,
-        fontWeight: typography.fontWeight.bold,
+        fontVariant: ['tabular-nums'],
+    },
+    durationCodeText: {
+        color: colors.textMuted, // Subtler
+        fontWeight: 'normal',
     },
     scrubberContainer: {
         height: 100, // Increased for visibility
@@ -440,28 +442,38 @@ const styles = StyleSheet.create({
         borderRadius: radii.sm, // Keep radius
         overflow: 'hidden', // Ensure tint/overlay respects radius
     },
-    segmentInfo: {
+    segmentInfoContainer: {
         padding: spacing.base,
         borderTopWidth: 1,
         borderTopColor: colors.bgTertiary,
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: spacing.md,
     },
-    segmentBadge: {
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xs,
-        borderRadius: radii.pill,
-        marginBottom: spacing.sm,
-    },
-    segmentBadgeText: {
-        fontSize: typography.fontSize.sm,
-        color: colors.textPrimary,
-        fontWeight: typography.fontWeight.bold,
+    textWrapper: {
+        flex: 1,
+        minHeight: 80,
+        justifyContent: 'center',
+        flexDirection: 'row', // Align icon and text horizontally
+        alignItems: 'center', // Center them vertically relative to each other? No, if text is long, icon should probably be at top?
+        // Let's try centering first as text is short usually.
     },
     segmentReasonText: {
-        fontSize: typography.fontSize.md,
-        color: colors.textPrimary,
-        textAlign: 'center',
-        marginBottom: spacing.xs,
+        flex: 1, // Take remaining width
+        fontSize: typography.fontSize.sm,
+        color: colors.textSecondary,
+        textAlign: 'left',
+    },
+    ghostButton: {
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+    },
+    ghostButtonText: {
+        fontSize: typography.fontSize.sm,
+        fontWeight: typography.fontWeight.bold,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     segmentHint: {
         fontSize: typography.fontSize.xs,
