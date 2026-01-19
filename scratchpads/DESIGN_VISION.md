@@ -18,34 +18,49 @@ We are building a **Professional Tool**, not a Social Toy.
 -   **No Truncation**: We do not truncate context. If AI explains something, we show the full explanation. We respect the intelligence of the user.
 
 ### Color & Contrast
--   **Dark Mode Only**: The app is a dark room.
--   **Ghost vs. Solid**:
-    -   **Secondary Actions** are "Ghost" (text only, no bg). They don't steal focus.
-    -   **Primary Actions** use color sparingly.
+-   **Dark Mode Only**: The app is a dark room. Backgrounds are deep grays/blacks (`#18181B`).
+-   **Ghost vs. Solid**: Secondary Actions are "Ghost" (text only) or "Icon Only". They don't steal focus.
 -   **Semantic Colors**:
-    -   **Gold/Yellow**: AI Highlight/Keep. (Verified quality).
-    -   **Red/Grey**: Exclude/Cut. (Noise).
+    -   **Gold/Yellow (✨)**: Magic/Keep (AI Highlight).
+    -   **TextSecondary (Grey)**: Inactive/Excluded.
+    -   **White**: Active/Included.
 
-## 3. Component Evolution (Lessons Learned)
+### Iconography
+-   **Vector Only**: **NO EMOJIS** in the UI. Emojis feel amateur.
+-   **Set**: Use `Ionicons` (Sharp/Fill variants preferred for active states).
+-   **Consistency**:
+    -   Use `flash` for branding (⚡).
+    -   Use `eye` / `eye-off` for visibility.
+    -   Use `play` / `pause` for playback.
 
-### The Timeline
-*   **Physicality**: Segments are not just colored rects. They have `2px` gaps and `6px` radius. They feel like physical clips you can move.
-*   **Interaction**: We prefer "Switching state" (Include/Exclude) over "Destruction" (Delete). The editing is non-destructive.
+## 3. Interaction Principles
+
+### The "Visibility" Metaphor
+We switched from a "Keep/Remove" binary to a **"Visible/Invisible"** metaphor, inspired by NLEs (Non-Linear Editors like Premiere/FCP).
+-   **Action**: Toggle the **Eye Icon** (👁️).
+-   **Visible (Included)**: Eye Open. Text is **White**.
+-   **Hidden (Excluded)**: Eye Closed. Text is **Subtle Grey** (`colors.textSecondary`).
+-   *Why?* It removes the cognitive load of "Is this button showing status or action?".
+
+### Edge-to-Edge Immersion
+Major functional surfaces flush with the screen edges to maximize usable space.
+-   **Timeline**: Full width. No margins.
+-   **Transcript**: Full width. No margins.
+-   **Why?**: On mobile, horizontal space is premium. Margins on the timeline reduce precision.
+
+### Direct Manipulation
+-   **Physicality**: Segments have `2px` gaps and `6px` radius. They feel like physical clips.
+-   **Snapping**: (Planned) Haptic feedback for scrubbing.
+
+## 4. Component Evolution (Lessons Learned)
 
 ### The Timer
 *   **Evolution**: `Plain Text` -> `Pill/Badge` -> `Plain Text (Refined)`.
-*   **Lesson**: We tried to make the timer look "modern" with a glass-morphism pill. It failed. It was too "loud". We reverted to **Classic Minimalist**: pure text, centered, monospaced. It respects the pro-tool lineage (Premiere/FCP).
+*   **Lesson**: We tried to make the timer look "modern" with a glass-morphism pill. It failed. It was too "loud". We reverted to **Classic Minimalist**: pure text, centered, monospaced.
 
-### Context & Reasoning
-*   **Icons > Emojis**: Emojis feel amateur in a tool. We use clean vector icons (`Ionicons`).
-    -   ✨ for Keep.
-    -   ✂️ for Exclude.
-*   **Show, Don't Tell**: Don't title a section "Why AI thinks this". Just show the reasoning text with a relevant icon.
-
-## 4. Interaction Principles
-*   **Direct Manipulation**: If it looks touchable, it must be touchable.
-*   **Stability**: UI elements (like text boxes) have `minHeight` to prevent layout jumps when content changes.
-*   **Haptics**: (To be implemented) Mechanical feedback for mechanical actions (snapping, cutting).
+### The Project List
+*   **Evolution**: Emojis -> Vector Icons.
+*   **Lesson**: Replacing temporary emojis with `Ionicons` instantly elevated the "Perceived Quality" of the app.
 
 ---
-*Last Updated: January 2026*
+*Last Updated: January 19, 2026*
