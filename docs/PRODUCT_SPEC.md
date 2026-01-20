@@ -100,4 +100,27 @@ Most apps edit based on "silence." We edit based on **Intent** and **Context**.
 
 ---
 
+## 5. Engineering Standards (The "Gold" Standard)
+
+**Agents working on this project must adhere to strict code quality standards.**
+We are not just building features; we are building a maintainable, modular system.
+
+### 🧱 Core Principles
+
+1.  **Clean Architecture**:
+    -   Respect the dependency rule. `Core` (Models) knows nothing about `Services`. `Services` know nothing about `Adapters`.
+    -   **Adapters are Plugins**: You should be able to swap `GeminiAdapter` for `GPT4Adapter` without touching a single line of business logic in `services/`.
+
+2.  **S.O.L.I.D. & SRP (Single Responsibility Principle)**:
+    -   **No God Objects**: If a class ends in `Manager` and has >200 lines, it is suspicious. Break it down.
+    -   **Small, Focused Modules**: Each file should do *one* thing well.
+        -   *Bad*: `video_processor.py` (does downloading, analyzing, and rendering).
+        -   *Good*: `downloader.py`, `analyzer.py`, `renderer.py`.
+
+3.  **Modularity**:
+    -   **Imports Matter**: Functional code should be importable without side effects.
+    -   **Dependency Injection**: Do not instantiate external services (like DBs or AI clients) inside logic classes. Pass them in via `__init__` or Protocol interfaces.
+
+---
+
 *Garbage in, viral gold out.*

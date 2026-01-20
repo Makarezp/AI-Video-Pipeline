@@ -118,6 +118,7 @@ The agent has configured access to the **iOS Simulator MCP Server**. This allows
     - Full-screen video playback of source media
 - [x] **Timeline Component**: 60fps Reanimated interactions with **thumbnail filmstrip**
 - [x] **Save to Gallery**: Download rendered video to device Photos
+- [x] **Documentation**: Restructured into `docs/` with Context Router & Engineering Standards enforced.
 
 ---
 
@@ -135,10 +136,12 @@ After each significant change, update these files to reflect the **current produ
 
 | Document | Focus |
 |----------|-------|
-| `gigo/README.md` | Pipeline steps, API endpoints, architecture diagram |
-| `mobile/README.md` | User-facing features, screen descriptions, tech stack |
-| `scratchpads/garbageingoldout.md` | High-level product philosophy and data flow |
-| `scratchpads/AGENT_HANDOFF.md` | Developer onboarding, entry points, what's done |
+| `README.md` (Root) | **Context Router**. Points agents to the right docs based on role. |
+| `docs/PRODUCT_SPEC.md` | **Product Bible**. High-level architecture, data flow, engineering standards. |
+| `docs/PROJECT_MEMORY.md` | **Active Memory**. Status, recent changes, "gotchas". |
+| `gigo/README.md` | Backend specifics (FastAPI, FFmpeg, DI layers). |
+| `mobile/README.md` | Mobile specifics (Expo, React Native details). |
+| `mobile/DESIGN_SYSTEM.md`| UI/UX Philosophy and Visual Language. |
 
 ### What to Document
 - **Key architectural decisions** (e.g., "Why file-based storage vs. database?").
