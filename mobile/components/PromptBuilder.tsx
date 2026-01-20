@@ -243,17 +243,19 @@ export default function PromptBuilder({ onSubmit, loading }: PromptBuilderProps)
                                 onChangeText={setCustomText}
                             />
                         )}
-
-                        {/* Submit button */}
-                        <GradientButton
-                            title="Begin Analysis"
-                            onPress={handleSubmit}
-                            loading={loading}
-                            style={styles.submitButton}
-                        />
                     </View>
                 )}
             />
+
+            {/* Fixed Bottom Footer */}
+            <View style={styles.fixedFooter}>
+                <GradientButton
+                    title="Begin Analysis"
+                    onPress={handleSubmit}
+                    loading={loading}
+                    style={styles.submitButton}
+                />
+            </View>
         </View>
     );
 }
@@ -261,6 +263,7 @@ export default function PromptBuilder({ onSubmit, loading }: PromptBuilderProps)
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        position: 'relative', // Ensure absolute positioning works for footer
     },
     loadingContainer: {
         flex: 1,
@@ -269,7 +272,7 @@ const styles = StyleSheet.create({
     },
     listContent: {
         paddingHorizontal: spacing.base,
-        paddingBottom: spacing.xl,
+        paddingBottom: 100, // Make space for fixed footer
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -380,8 +383,19 @@ const styles = StyleSheet.create({
         textAlignVertical: 'top',
         marginBottom: spacing.lg,
     },
+    fixedFooter: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: spacing.base,
+        backgroundColor: colors.bgPrimary,
+        borderTopWidth: 1,
+        borderTopColor: colors.bgTertiary,
+        paddingBottom: spacing.xl, // Safe area padding
+    },
     submitButton: {
-        marginTop: spacing.md,
+        width: '100%',
     },
 });
 
