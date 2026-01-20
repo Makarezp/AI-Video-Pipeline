@@ -273,7 +273,7 @@ export default function EditorScreen() {
                     activeOpacity={0.8}
                 >
                     <LinearGradient
-                        colors={isRendering || isSaving || isLoading ? [colors.bgTertiary, colors.bgTertiary] : gradients.gold}
+                        colors={isRendering || isSaving || isLoading ? [colors.bgTertiary, colors.bgTertiary] : gradients.ai}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.headerExportButton}

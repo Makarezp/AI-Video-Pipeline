@@ -18,7 +18,7 @@ export const colors = {
     // Accent Colors
     accentPrimary: '#3B82F6',   // High-vis Blue (Standard Pro)
     accentSecondary: '#8B5CF6', // Purple (Creative)
-    accentGold: '#FFD700',      // Gold (Keep/Premium)
+    accentAi: '#22D3EE',        // Electric Teal (AI/Smart)
 
     // Semantic Colors
     success: '#10B981',         // Green (Subtle)
@@ -51,8 +51,8 @@ export const gradients = {
     // Accent gradient (cyan to purple)
     accent: ['#00D4FF', '#A855F7'] as const,
 
-    // Gold gradient for premium actions
-    gold: ['#FFD700', '#FFA500'] as const,
+    // AI gradient for premium/magic actions
+    ai: ['#22D3EE', '#0EA5E9'] as const,
 
     // Danger gradient for remove actions
     danger: ['#EF4444', '#DC2626'] as const,

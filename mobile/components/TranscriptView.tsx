@@ -138,6 +138,6 @@ const styles = StyleSheet.create({
     activeWord: {
         color: colors.accentPrimary,
         fontWeight: typography.fontWeight.bold,
-        backgroundColor: 'rgba(255, 215, 0, 0.1)', // Subtle gold highlight
+        backgroundColor: 'rgba(34, 211, 238, 0.1)', // Subtle teal highlight
     },
 });

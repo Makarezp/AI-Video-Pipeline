@@ -32,7 +32,7 @@ We are building a **Professional Tool**, not a Social Toy.
 -   **Dark Mode Only**: The app is a dark room. Backgrounds are deep grays/blacks (`#18181B`).
 -   **Ghost vs. Solid**: Secondary Actions are "Ghost" (text only) or "Icon Only". They don't steal focus.
 -   **Semantic Colors**:
-    -   **Gold/Yellow (✨)**: Magic/Keep (AI Highlight).
+    -   **Teal (Info)**: Keep (AI Highlight).
     -   **TextSecondary (Grey)**: Inactive/Excluded.
     -   **White**: Active/Included.
 
