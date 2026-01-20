@@ -324,15 +324,15 @@ export default function EditorScreen() {
                 {showCalibration ? (
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={styles.calibrationContainer}>
-                            <Text style={styles.calibrationTitle}>Calibrate Your AI ⚡</Text>
+                            <Text style={styles.calibrationTitle}>Analysis Configuration</Text>
                             <Text style={styles.calibrationSubtitle}>
-                                The AI analyzes visuals and audio automatically.
-                                Add specific instructions if you want, or leave blank for auto-magic.
+                                AI will analyze visuals and audio to identify segments for removal.
+                                Provide specific guidance below, or proceed with default analysis.
                             </Text>
 
                             <TextInput
                                 style={styles.instructionInput}
-                                placeholder="(Optional) e.g. 'Remove all pauses', 'Keep only the funny parts'..."
+                                placeholder="e.g. 'Remove hesitations', 'Keep introductions'..."
                                 placeholderTextColor={colors.textMuted}
                                 multiline
                                 value={instructions}
@@ -340,7 +340,7 @@ export default function EditorScreen() {
                             />
 
                             <GradientButton
-                                title="Start Magic ✨"
+                                title="Begin Analysis"
                                 onPress={handleStartAnalysis}
                                 loading={isStartingAnalysis}
                                 style={styles.startButton}
