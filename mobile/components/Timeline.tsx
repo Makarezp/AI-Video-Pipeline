@@ -1,15 +1,14 @@
 /**
- * Timeline - CapCut-style Fixed Playhead Scrubber with Thumbnails
+ * Timeline - CapCut-style Fixed Playhead Scrubber with Thumbnails & Zoom
  * 
- * Architecture based on Reanimated best practices:
+ * Architecture:
  * - Fixed playhead in screen center
- * - Animated.ScrollView with UI-thread scroll handler
- * - isScrubbing flag prevents feedback loop
- * - Segment blocks with proportional widths
- * - Thumbnail filmstrip using lazy-loaded images
+ * - Animated.ScrollView (Simple & Robust)
+ * - Pinch-to-Zoom (Updates pixelsPerSecond)
+ * - Restored "Traffic Light" Visuals & Context Panel
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
     StyleSheet,
     View,
@@ -17,26 +16,28 @@ import {
     Text,
     Dimensions,
     Image,
-    Switch,
     Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
     useSharedValue,
     useAnimatedScrollHandler,
     useAnimatedRef,
     runOnJS,
-    scrollTo,
+    useAnimatedStyle,
+    withTiming,
 } from 'react-native-reanimated';
 import { TimelineSegment, getThumbnailUrl } from '../utils/api';
 import { colors, typography, spacing, radii } from '../utils/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CONTAINER_MARGIN = 0; // Edge to edge
-const CONTAINER_WIDTH = SCREEN_WIDTH - CONTAINER_MARGIN;
-const CENTER_OFFSET = CONTAINER_WIDTH / 2;
-const PIXELS_PER_SECOND = 50; // Zoom level
-const THUMBNAIL_WIDTH = 50; // Width of each thumbnail in pixels
+const CENTER_OFFSET = SCREEN_WIDTH / 2;
+
+// Zoom Limits
+const MIN_PPS = 10;
+const MAX_PPS = 150;
+const INITIAL_PPS = 50;
 
 interface TimelineProps {
     segments: TimelineSegment[];
@@ -49,7 +50,7 @@ interface TimelineProps {
 }
 
 /**
- * ThumbnailImage - Lazy-loaded thumbnail with retry on error
+ * ThumbnailImage - Lazy-loaded thumbnail with retry
  */
 function ThumbnailImage({
     projectId,
@@ -60,36 +61,17 @@ function ThumbnailImage({
     index: number;
     width: number;
 }) {
-    const [retryCount, setRetryCount] = useState(0);
     const [hasError, setHasError] = useState(false);
-    const maxRetries = 3;
-    const retryDelays = [1000, 2000, 5000];
-
-    const handleError = useCallback(() => {
-        if (retryCount < maxRetries) {
-            setTimeout(() => {
-                setRetryCount(prev => prev + 1);
-                setHasError(false);
-            }, retryDelays[retryCount] || 5000);
-        }
-        setHasError(true);
-    }, [retryCount]);
-
     const uri = getThumbnailUrl(projectId, index);
 
-    if (hasError && retryCount >= maxRetries) {
-        return (
-            <View style={[styles.thumbnailPlaceholder, { width }]} />
-        );
-    }
+    if (hasError) return <View style={[styles.thumbnailPlaceholder, { width }]} />;
 
     return (
         <Image
-            key={`${uri}-${retryCount}`}
             source={{ uri }}
             style={[styles.thumbnail, { width }]}
             resizeMode="cover"
-            onError={handleError}
+            onError={() => setHasError(true)}
         />
     );
 }
@@ -103,227 +85,231 @@ export default function Timeline({
     projectId,
     thumbnailCount = 0,
 }: TimelineProps) {
-    const scrollRef = useAnimatedRef<Animated.ScrollView>();
+    // State
+    const [pixelsPerSecond, setPixelsPerSecond] = useState(INITIAL_PPS);
 
-    // Shared values (UI thread)
+    // Reanimated Shared Values
     const scrollX = useSharedValue(0);
     const isScrubbing = useSharedValue(false);
     const lastSeekTime = useSharedValue(0);
+    const scale = useSharedValue(1); // Visual scale during pinch
 
-    // Timeline geometry
-    const timelineWidth = duration * PIXELS_PER_SECOND;
-    const contentWidth = timelineWidth + CENTER_OFFSET * 2;
+    const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
-    // Calculate thumbnail data
-    const thumbnailSeconds = thumbnailCount > 0 ? thumbnailCount : Math.ceil(duration);
-    const thumbnailWidth = timelineWidth / thumbnailSeconds;
+    // Derived Geometry
+    const currentPPS = pixelsPerSecond; // We use state for layout to ensure consistency
+    const timelineWidth = duration * currentPPS;
 
-    // JS thread seek function (called from UI thread via runOnJS)
+    // Zoom Gesture
+    const pinch = Gesture.Pinch()
+        .onUpdate((e) => {
+            scale.value = e.scale;
+        })
+        .onEnd((e) => {
+            let newPPS = pixelsPerSecond * e.scale;
+            newPPS = Math.max(MIN_PPS, Math.min(newPPS, MAX_PPS));
+            runOnJS(setPixelsPerSecond)(newPPS);
+            scale.value = withTiming(1);
+        });
+
+    // Scroll Handler
+    const isScrubbingRef = useRef(false);
+    const setScrubbingRef = (val: boolean) => { isScrubbingRef.current = val; };
+
     const performSeek = useCallback((time: number) => {
-        // Throttle: only seek if change > 50ms
         if (Math.abs(time - lastSeekTime.value) > 0.05) {
             lastSeekTime.value = time;
             onSeek(Math.max(0, Math.min(duration, time)));
         }
     }, [onSeek, duration]);
 
-    // Sync playback position to scroll (when not scrubbing)
-    // Using a ref to track scrubbing state on JS thread
-    const isScrubbingRef = React.useRef(false);
-
-    // Helper to update scrubbing ref from UI thread
-    const setScrubbingRef = useCallback((value: boolean) => {
-        isScrubbingRef.current = value;
-    }, []);
-
-    // Animated scroll handler (runs on UI thread)
     const scrollHandler = useAnimatedScrollHandler({
         onBeginDrag: () => {
             isScrubbing.value = true;
-            runOnJS(setScrubbingRef)(true); // Immediate update to JS thread
+            runOnJS(setScrubbingRef)(true);
         },
         onScroll: (event) => {
             scrollX.value = event.contentOffset.x;
-            // Only seek when user is actively dragging (not during programmatic scroll)
             if (isScrubbing.value) {
-                const time = event.contentOffset.x / PIXELS_PER_SECOND;
+                const time = event.contentOffset.x / currentPPS;
                 runOnJS(performSeek)(time);
             }
         },
-        onEndDrag: () => {
-            // Keep scrubbing true during momentum
-        },
         onMomentumEnd: () => {
             isScrubbing.value = false;
-            runOnJS(setScrubbingRef)(false); // Immediate update to JS thread
+            runOnJS(setScrubbingRef)(false);
         },
     });
 
-    // Sync scroll position to playback time using native scrollTo
+    // Sync Playback -> Scroll
     useEffect(() => {
         if (!isScrubbingRef.current && scrollRef.current) {
-            const targetX = currentTime * PIXELS_PER_SECOND;
-            // Use animated: false for instant updates (video sends 60fps updates)
+            const targetX = currentTime * currentPPS;
             (scrollRef.current as any).scrollTo?.({ x: targetX, animated: false });
         }
-    }, [currentTime]);
+    }, [currentTime, currentPPS]);
 
-    // Find current segment
+    // Current Segment Computation
     const currentSegmentIndex = segments.findIndex(
         seg => currentTime >= seg.start && currentTime < seg.end
     );
     const currentSegment = currentSegmentIndex >= 0 ? segments[currentSegmentIndex] : null;
 
-    // Generate time markers
-    const markerInterval = duration > 60 ? 10 : duration > 30 ? 5 : 2;
-    const timeMarkers = [];
-    for (let t = 0; t <= duration; t += markerInterval) {
-        timeMarkers.push(t);
-    }
-
-    const formatTime = (seconds: number): string => {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    // Stats
-    const keepCount = segments.filter(s => s.action === 'keep').length;
-    const removeCount = segments.filter(s => s.action === 'remove').length;
-
-    // Generate thumbnail indices (1-indexed)
+    // Rendering Helpers
+    const thumbnailSeconds = thumbnailCount > 0 ? thumbnailCount : Math.ceil(duration);
+    const thumbnailWidth = timelineWidth / thumbnailSeconds;
     const thumbnailIndices = Array.from({ length: thumbnailSeconds }, (_, i) => i + 1);
+
+    // Animated Container Style (for Pinch visual feedback)
+    const containerAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scaleX: scale.value }],
+        // Pivot point? Default is center. We might want pivot to be playhead.
+        // For simplicity, we just scale. The "jump" on end is acceptable for MVP.
+    }));
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    };
 
     return (
         <View style={styles.container}>
-            {/* Header with time display */}
-            {/* Header with Classic Minimalist Timer */}
+            {/* Header / Stats */}
             <View style={styles.header}>
-                <Text style={styles.timeCodeText}>
-                    {formatTime(currentTime)}
-                    <Text style={styles.durationCodeText}> / {formatTime(duration)}</Text>
-                </Text>
-            </View>
+                <TouchableOpacity
+                    onPress={() => setPixelsPerSecond(p => Math.max(MIN_PPS, p - 25))}
+                    style={styles.zoomButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                    <Ionicons name="remove-circle-outline" size={20} color={colors.textMuted} />
+                </TouchableOpacity>
 
-            {/* Timeline scrubber */}
-            <View style={styles.scrubberContainer}>
-                {/* Fixed center playhead */}
-                <View style={styles.playhead} pointerEvents="none">
-                    <View style={styles.playheadHead} />
-                    <View style={styles.playheadLine} />
+                <View style={styles.timeStats}>
+                    <Text style={styles.timeCodeText}>
+                        {formatTime(currentTime)}
+                        <Text style={styles.durationCodeText}> / {formatTime(duration)}</Text>
+                    </Text>
                 </View>
 
-                {/* Animated scrollable timeline */}
-                {/* Animated scrollable timeline */}
-                <Animated.ScrollView
-                    ref={scrollRef}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    onScroll={scrollHandler}
-                    scrollEventThrottle={16}
-                    decelerationRate="fast"
-                    bounces={false}
+                <TouchableOpacity
+                    onPress={() => setPixelsPerSecond(p => Math.min(MAX_PPS, p + 25))}
+                    style={styles.zoomButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                    {/* Left Spacer */}
-                    <View style={{ width: CENTER_OFFSET }} />
-
-                    {/* Timeline Content Container */}
-                    <View style={{ width: timelineWidth, height: '100%' }}>
-                        {/* Time markers row */}
-                        <View style={styles.timeMarkersRow}>
-                            {timeMarkers.map((time) => (
-                                <View
-                                    key={time}
-                                    style={[styles.timeMarker, { left: time * PIXELS_PER_SECOND }]}
-                                >
-                                    <Text style={styles.timeMarkerText}>{formatTime(time)}</Text>
-                                    <View style={styles.timeMarkerTick} />
-                                </View>
-                            ))}
-                        </View>
-
-
-                        {/* Thumbnails track (background layer) */}
-                        {projectId && thumbnailCount > 0 && (
-                            <View style={[styles.thumbnailsTrack, { width: timelineWidth }]}>
-                                {thumbnailIndices.map((index) => (
-                                    <ThumbnailImage
-                                        key={index}
-                                        projectId={projectId}
-                                        index={index}
-                                        width={thumbnailWidth}
-                                    />
-                                ))}
-                            </View>
-                        )}
-
-                        {/* Segments track (overlay) */}
-                        <View style={[styles.segmentsTrack, { width: timelineWidth }]}>
-                            {segments.map((segment, index) => {
-                                const isKeep = segment.action === 'keep';
-                                const segmentWidth = (segment.end - segment.start) * PIXELS_PER_SECOND;
-                                const segmentLeft = segment.start * PIXELS_PER_SECOND;
-
-                                // Visual Gap Logic:
-                                // Reduce width by 2px to create a gap between continuous segments
-                                const GAP_SIZE = 2;
-                                const displayWidth = Math.max(segmentWidth - GAP_SIZE, 2);
-
-                                return (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={[
-                                            styles.segmentBlock,
-                                            {
-                                                left: segmentLeft,
-                                                width: displayWidth,
-                                                backgroundColor: isKeep ? 'rgba(0, 255, 0, 0.05)' : 'rgba(0, 0, 0, 0.7)',
-                                                borderRadius: 6, // Rounded "Clip" look
-                                            }
-                                        ]}
-                                        onPress={() => onToggleSegment(index)}
-                                        activeOpacity={0.9}
-                                    >
-                                        {/* Traffic Light Line - also rounded at top */}
-                                        <View style={{
-                                            height: 4,
-                                            width: '100%',
-                                            backgroundColor: isKeep ? colors.success : colors.danger,
-                                            marginTop: 0,
-                                        }} />
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
-                    </View>
-
-                    {/* Right Spacer */}
-                    <View style={{ width: CENTER_OFFSET }} />
-                </Animated.ScrollView>
+                    <Ionicons name="add-circle-outline" size={20} color={colors.textMuted} />
+                </TouchableOpacity>
             </View>
 
-            {/* Current segment info */}
-            {/* Current segment info */}
+            {/* Scale Container */}
+            <GestureDetector gesture={pinch}>
+                <View style={styles.scrubberContainer}>
+                    {/* Fixed Playhead */}
+                    <View style={styles.playhead} pointerEvents="none">
+                        <View style={styles.playheadHead} />
+                        <View style={styles.playheadLine} />
+                    </View>
+
+                    <Animated.ScrollView
+                        ref={scrollRef}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        onScroll={scrollHandler}
+                        scrollEventThrottle={16}
+                        decelerationRate="fast"
+                        contentContainerStyle={{ paddingHorizontal: CENTER_OFFSET }}
+                    >
+                        {/* The Scalable Content */}
+                        <Animated.View style={[{ width: timelineWidth, height: '100%' }, containerAnimatedStyle]}>
+
+                            {/* Thumbnails - Adaptive Sampling */}
+                            {projectId && thumbnailCount > 0 && (
+                                <View style={styles.thumbnailsTrack}>
+                                    {thumbnailIndices.filter((_, i) => {
+                                        // LOD: At low zoom, show fewer thumbnails to avoid 1px slivers
+                                        // PPS < 20: Show every 5th second (50px width)
+                                        // PPS < 40: Show every 2nd second
+                                        // Else: Show every second
+                                        const stride = currentPPS < 20 ? 5 : currentPPS < 40 ? 2 : 1;
+                                        return i % stride === 0;
+                                    }).map((index) => {
+                                        const stride = currentPPS < 20 ? 5 : currentPPS < 40 ? 2 : 1;
+                                        // Width of this thumbnail block covers 'stride' seconds
+                                        const thumbWidth = currentPPS * stride;
+
+                                        return (
+                                            <ThumbnailImage
+                                                key={index}
+                                                projectId={projectId}
+                                                index={index}
+                                                width={thumbWidth}
+                                            />
+                                        );
+                                    })}
+                                </View>
+                            )}
+
+                            {/* Markers */}
+                            <View style={styles.timeMarkersRow}>
+                                {Array.from({ length: Math.ceil(duration / 5) + 1 }).map((_, i) => {
+                                    const t = i * 5;
+                                    return (
+                                        <View key={t} style={[styles.timeMarker, { left: t * currentPPS }]}>
+                                            <Text style={styles.timeMarkerText}>{formatTime(t)}</Text>
+                                            <View style={styles.timeMarkerTick} />
+                                        </View>
+                                    );
+                                })}
+                            </View>
+
+                            {/* Segments */}
+                            <View style={styles.segmentsTrack}>
+                                {segments.map((segment, index) => {
+                                    const isKeep = segment.action === 'keep';
+                                    const width = (segment.end - segment.start) * currentPPS;
+                                    const left = segment.start * currentPPS;
+
+                                    // Minimum width for touch target
+                                    const displayWidth = Math.max(width - 2, 2);
+
+                                    return (
+                                        <TouchableOpacity
+                                            key={index}
+                                            style={[
+                                                styles.segmentBlock,
+                                                {
+                                                    left,
+                                                    width: displayWidth,
+                                                    backgroundColor: isKeep ? 'transparent' : 'rgba(0, 0, 0, 0.7)',
+                                                    borderColor: isKeep ? colors.success : colors.danger,
+                                                    borderTopWidth: 4, // Traffic Light
+                                                }
+                                            ]}
+                                            onPress={() => onToggleSegment(index)}
+                                            activeOpacity={0.7}
+                                        />
+                                    );
+                                })}
+                            </View>
+                        </Animated.View>
+                    </Animated.ScrollView>
+                </View>
+            </GestureDetector>
+
+            {/* Context Panel (RESTORED) */}
             {currentSegment && (
                 <View style={styles.segmentInfoContainer}>
-                    {/* Context Text Wrapper */}
                     <View style={styles.textWrapper}>
-                        <Text
-                            style={[
-                                styles.segmentReasonText,
-                                // Dim text if excluded
-                                currentSegment.action !== 'keep' && { color: colors.textSecondary }
-                            ]}
-                        >
+                        <Text style={[
+                            styles.segmentReasonText,
+                            currentSegment.action !== 'keep' && { color: colors.textSecondary }
+                        ]}>
                             {currentSegment.reason || `Segment ${currentSegmentIndex + 1}`}
                         </Text>
                     </View>
 
-                    {/* Visibility Toggle */}
                     <TouchableOpacity
-                        onPress={() => currentSegmentIndex >= 0 && onToggleSegment(currentSegmentIndex)}
-                        activeOpacity={0.6}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        onPress={() => onToggleSegment(currentSegmentIndex)}
                         style={styles.visibilityButton}
                     >
                         <Ionicons
@@ -341,32 +327,34 @@ export default function Timeline({
 const styles = StyleSheet.create({
     container: {
         backgroundColor: colors.bgSecondary,
-        // borderRadius removed for edge-to-edge
-        // marginHorizontal removed for edge-to-edge
         marginVertical: spacing.sm,
-        // overflow: 'hidden', // Not strictly needed if no borderRadius, but good for safety
     },
     header: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        justifyContent: 'center',
         paddingVertical: spacing.sm,
-        paddingBottom: 0,
+        paddingHorizontal: spacing.md,
     },
-    // Classic Minimalist Timer Styles
+    timeStats: {
+        alignItems: 'center',
+    },
+    zoomButton: {
+        padding: 4,
+    },
     timeCodeText: {
         fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-        fontSize: typography.fontSize.sm, // Slightly larger than before
+        fontSize: typography.fontSize.sm,
         fontWeight: '600',
         color: colors.textPrimary,
         fontVariant: ['tabular-nums'],
     },
     durationCodeText: {
-        color: colors.textMuted, // Subtler
+        color: colors.textMuted,
         fontWeight: 'normal',
     },
     scrubberContainer: {
-        height: 100, // Increased for visibility
+        height: 100,
         position: 'relative',
     },
     playhead: {
@@ -391,11 +379,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     timeMarkersRow: {
-        height: 20,
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
+        height: 20,
     },
     timeMarker: {
         position: 'absolute',
@@ -413,12 +401,12 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     thumbnailsTrack: {
-        height: 70,
-        borderRadius: radii.sm,
         position: 'absolute',
         top: 20,
         left: 0,
         flexDirection: 'row',
+        height: 70,
+        borderRadius: radii.sm,
         overflow: 'hidden',
     },
     thumbnail: {
@@ -429,18 +417,16 @@ const styles = StyleSheet.create({
         backgroundColor: colors.bgTertiary,
     },
     segmentsTrack: {
-        height: 70,
-        borderRadius: radii.sm,
         position: 'absolute',
-        top: 20, // Sync with thumbnailsTrack
+        top: 20,
         left: 0,
+        height: 70,
     },
     segmentBlock: {
         position: 'absolute',
         top: 0,
         bottom: 0,
-        borderRadius: radii.sm, // Keep radius
-        overflow: 'hidden', // Ensure tint/overlay respects radius
+        borderRadius: radii.sm,
     },
     segmentInfoContainer: {
         padding: spacing.base,
@@ -450,42 +436,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: spacing.md,
+        minHeight: 80,
     },
     textWrapper: {
         flex: 1,
-        minHeight: 80,
-        justifyContent: 'center',
-        flexDirection: 'row', // Align icon and text horizontally
-        alignItems: 'center', // Center them vertically relative to each other? No, if text is long, icon should probably be at top?
-        // Let's try centering first as text is short usually.
     },
     segmentReasonText: {
-        flex: 1, // Take remaining width
         fontSize: typography.fontSize.sm,
         color: colors.textSecondary,
-        textAlign: 'left',
     },
     visibilityButton: {
         padding: spacing.sm,
         backgroundColor: colors.bgTertiary,
         borderRadius: radii.md,
-    },
-    segmentHint: {
-        fontSize: typography.fontSize.xs,
-        color: colors.textMuted,
-    },
-    transcriptTrack: {
-        height: 30,
-        position: 'absolute',
-        top: 24,
-        left: 0,
-    },
-    transcriptWord: {
-        position: 'absolute',
-        fontSize: 10,
-        color: colors.textSecondary,
-        fontFamily: typography.fontFamily.mono,
-        textAlign: 'left',
-        top: 0,
     },
 });
