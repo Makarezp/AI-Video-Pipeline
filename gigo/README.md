@@ -28,6 +28,13 @@ gigo/
 └── factory.py         # Dependency injection
 ```
 
+### Layer Definitions
+
+- **`gigo/adapters/`**: Infrastructure Layer. Contains concrete implementations of external services.
+- **`gigo/services/`**: Application Logic. Pure business logic that coordinates data flow (Transcription, Analysis, Timeline Rendering).
+- **`gigo/core/`**: Domain Layer. Contains shared models (`models.py`) and interfaces (`protocols.py`). The `Orchestrator` here is a thin coordinator.
+- **`gigo/storage/`**: Persistence Layer. File-based repository for Projects.
+
 ### The Pipeline
 1. **Project Library** → Persistent file-based storage of sessions
 2. **Whisper** → Word-level timestamps from audio

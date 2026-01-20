@@ -1,12 +1,15 @@
-<!-- 
-AGENT GUIDE: HOW TO UPDATE THIS DOCUMENT
-Focus on the *Vision of Changes*, not the implementation details. 
-Do not list what was done. Instead, capture *why* the design evolved.
-Document the philosophical shifts, new principles discovered, and lessons learned about the user experience.
-Everything added here should reinforce or refine the core philosophy of "Invisible Precision".
+<!--
+🤖 AGENT INSTRUCTION: DOCUMENTATION MAINTENANCE
+1. CONTEXT CHECK: Before editing, ask yourself: "Did my recent code changes affect Architecture, Setup, or Public API?"
+   - NO: Do not touch this file.
+   - YES: Update ONLY the specific sections that changed.
+2. INCREMENTAL EDITING: 
+   - NEVER regenerate this entire file.
+   - Use `replace_file_content` or `multi_replace_file_content` to make surgical edits.
+   - Preserve existing style, technical depth, and structure.
+3. SOURCE OF TRUTH: This README reflects the LIVE state of the project. Keep it sync'd with code.
 -->
-
-# GIGO Design Vision: "Invisible Precision"
+# GIGO Design System: "Invisible Precision"
 
 > **Core Philosophy**: The interface is a lens, not a painting. It should recede, leaving only the content and the control.
 

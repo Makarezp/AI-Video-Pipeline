@@ -1,6 +1,17 @@
-Here is the deep, high-level blueprint of the system we are building. Think of this as the Technical Specification you would show to a co-founder.
+<!--
+🤖 AGENT INSTRUCTION: DOCUMENTATION MAINTENANCE
+1. CONTEXT CHECK: Before editing, ask yourself: "Did my recent code changes affect Architecture, Setup, or Public API?"
+   - NO: Do not touch this file.
+   - YES: Update ONLY the specific sections that changed.
+2. INCREMENTAL EDITING: 
+   - NEVER regenerate this entire file.
+   - Use `replace_file_content` or `multi_replace_file_content` to make surgical edits.
+   - Preserve existing style, technical depth, and structure.
+3. SOURCE OF TRUTH: This README reflects the LIVE state of the project. Keep it sync'd with code.
+-->
+# 🏗️ GIGO Product Specification
 
-## The Product Definition
+Here is the deep, high-level blueprint of the system we are building. Think of this as the Technical Specification you would show to a co-founder.
 
 We are building a **"Multimodal Video Distillery"** for mobile creators.
 
@@ -89,16 +100,4 @@ Most apps edit based on "silence." We edit based on **Intent** and **Context**.
 
 ---
 
-## 5. Technical Strategy
-
-- **Clean Architecture Hierarchy**:
-  - `gigo/adapters/`: Infrastructure (FFmpeg, Whisper, Gemini).
-  - `gigo/services/`: Application Logic (Transcription, Analysis, Timeline Rendering).
-  - `gigo/core/`: Domain models & Orchestration.
-  - `gigo/storage/`: File-based Project Repository.
-  - `mobile/`: React Native (Expo SDK 52) frontend.
-- **Dependency Injection**: A factory pattern wires the system, allowing any component (e.g., the analyzer) to be swapped without touching the core logic.
-- **Parallelism**: Large videos are semantically chunked and analyzed in parallel, slashing total processing time.
-
----
 *Garbage in, viral gold out.*

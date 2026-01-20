@@ -1,13 +1,18 @@
 <!--
-AGENT GUIDE: HOW TO MAINTAIN THIS DOCUMENT
-This document is the "Running Memory" of the project.
-Its purpose is to capture SIGNIFICANT changes, architectural decisions, and "gotchas" for future agents.
-It should also contain HIGH LEVEL ARCHITECTURE and ORGANIZATION of the project.
-Do not log every small commit. Log the "Why" and the "What" of major shifts.
-If you implement a complex feature or discover a tricky bug, ADD IT HERE.
+🤖 AGENT INSTRUCTION: DOCUMENTATION MAINTENANCE
+1. CONTEXT CHECK: Before editing, ask yourself: "Did my recent code changes affect Architecture, Setup, or Public API?"
+   - NO: Do not touch this file.
+   - YES: Update ONLY the specific sections that changed.
+2. INCREMENTAL EDITING: 
+   - NEVER regenerate this entire file.
+   - Use `replace_file_content` or `multi_replace_file_content` to make surgical edits.
+   - Preserve existing style, technical depth, and structure.
+3. SOURCE OF TRUTH: This README reflects the LIVE state of the project. Keep it sync'd with code.
 -->
+# 🧠 AGENT MEMORY: Project GIGO
 
-# 🤖 AGENT HANDOFF: Project GIGO (Garbage In, Gold Out)
+Welcome, Agent. This is the **Active Memory** of the project.
+Read this to understand *where we are* and *what just happened*.
 
 Welcome, Agent. You are taking over a high-precision video editing engine with a native mobile client.
 
