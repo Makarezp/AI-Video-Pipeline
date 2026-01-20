@@ -222,10 +222,61 @@ export async function getProjectTranscript(projectId: string): Promise<Transcrip
     return response.json();
 }
 
-export async function startAnalysis(projectId: string, instructions?: string): Promise<void> {
-    const url = `${API_BASE}/projects/${projectId}/analyze${instructions ? `?instructions=${encodeURIComponent(instructions)}` : ''}`;
-    const response = await fetch(url, {
+// ===========================================
+// PROMPT BLOCKS API
+// ===========================================
+
+export interface PromptBlockConfig {
+    min?: number;
+    max?: number;
+    default?: number;
+    unit?: string;
+    param?: string;
+}
+
+export interface PromptBlock {
+    id: string;
+    label: string;
+    description: string;
+    type: 'remove' | 'keep';
+    config_type: 'slider' | null;
+    config_options: PromptBlockConfig | null;
+}
+
+export interface BlockState {
+    id: string;
+    enabled: boolean;
+    config: Record<string, number | string>;
+}
+
+/**
+ * Fetch available prompt blocks from the API
+ */
+export async function getPromptBlocks(): Promise<PromptBlock[]> {
+    const response = await fetch(`${API_BASE}/prompt-blocks`);
+    if (!response.ok) throw new Error('Failed to fetch prompt blocks');
+    return response.json();
+}
+
+/**
+ * Start analysis with structured prompt blocks
+ */
+export async function startAnalysis(
+    projectId: string,
+    blocks: BlockState[],
+    customText?: string
+): Promise<void> {
+    const enabledBlocks = blocks
+        .filter(b => b.enabled)
+        .map(b => ({ id: b.id, config: b.config }));
+
+    const response = await fetch(`${API_BASE}/projects/${projectId}/analyze`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            enabled_blocks: enabledBlocks,
+            custom_instructions: customText || null,
+        }),
     });
 
     if (!response.ok) {

@@ -12,7 +12,7 @@ Endpoints:
 import json
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import logging
 
@@ -34,6 +34,7 @@ from gigo.core.rendering import FFmpegRenderingService
 from gigo.core.storage import FileSystemProjectRepository
 from gigo.factory import create_orchestrator
 from gigo.services.timeline import TimelineService
+from gigo.prompts.prompt_blocks import get_blocks_for_api, build_user_instructions
 
 # Load environment variables
 load_dotenv()
@@ -75,6 +76,20 @@ class RenderResponse(BaseModel):
     success: bool
     output_path: Optional[str] = None
     error: Optional[str] = None
+
+
+class BlockConfig(BaseModel):
+    """Configuration for a single prompt block."""
+
+    id: str
+    config: dict[str, Any] = {}
+
+
+class AnalyzeRequest(BaseModel):
+    """Request body for /projects/{id}/analyze endpoint."""
+
+    enabled_blocks: list[BlockConfig] = []
+    custom_instructions: Optional[str] = None
 
 
 def run_project_analysis(project_id: str):
@@ -119,6 +134,12 @@ def run_project_analysis(project_id: str):
 def root():
     """Health check endpoint."""
     return {"status": "ok", "service": "GIGO API"}
+
+
+@app.get("/prompt-blocks")
+def get_prompt_blocks():
+    """Return available prompt blocks for the mobile app."""
+    return get_blocks_for_api()
 
 
 @app.get("/videos")
@@ -387,11 +408,11 @@ async def create_project(
 async def start_project_analysis(
     project_id: str,
     background_tasks: BackgroundTasks,
-    instructions: Optional[str] = None,
+    request: AnalyzeRequest = AnalyzeRequest(),
 ):
     """
     Trigger analysis for an existing project.
-    Optionally accepts user instructions to guide the AI.
+    Accepts structured prompt blocks and optional custom instructions.
     """
     project = repository.get_project(project_id)
     if not project:
@@ -400,9 +421,16 @@ async def start_project_analysis(
     if project.status == "analyzing":
         raise HTTPException(status_code=400, detail="Analysis already in progress")
 
-    # Update project with instructions if provided
-    if instructions:
+    # Build instructions from structured blocks
+    if request.enabled_blocks:
+        instructions = build_user_instructions(
+            [b.model_dump() for b in request.enabled_blocks],
+            request.custom_instructions,
+        )
         project.user_instructions = instructions
+        repository.save_project(project)
+    elif request.custom_instructions:
+        project.user_instructions = request.custom_instructions
         repository.save_project(project)
 
     # Set status to analyzing immediately to prevent double-clicks

@@ -16,11 +16,8 @@ import {
     Text,
     Alert,
     Dimensions,
-    TextInput,
     KeyboardAvoidingView,
     Platform,
-    TouchableWithoutFeedback,
-    Keyboard
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -31,9 +28,9 @@ import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
 import Timeline from '../components/Timeline';
 import TranscriptView from '../components/TranscriptView';
-import GradientButton from '../components/GradientButton';
 import { TimelineSkeleton, TranscriptSkeleton } from '../components/Skeleton';
 import AnalyzingIndicator from '../components/AnalyzingIndicator';
+import PromptBuilder from '../components/PromptBuilder';
 import {
     TimelineSegment,
     Timeline as TimelineType,
@@ -46,7 +43,8 @@ import {
     startAnalysis,
     ProjectMetadata,
     Transcript,
-    getProjectTranscript
+    getProjectTranscript,
+    BlockState,
 } from '../utils/api';
 import { colors, gradients, typography, spacing, radii, shadows } from '../utils/theme';
 
@@ -63,7 +61,6 @@ export default function EditorScreen() {
     const [isLoading, setIsLoading] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
-    const [instructions, setInstructions] = useState('');
     const [isStartingAnalysis, setIsStartingAnalysis] = useState(false);
     const [isRendering, setIsRendering] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -105,11 +102,11 @@ export default function EditorScreen() {
         pollForStatus();
     }, [projectId, pollForStatus]);
 
-    const handleStartAnalysis = async () => {
+    const handleStartAnalysis = async (blocks: BlockState[], customText: string) => {
         if (!project) return;
         setIsStartingAnalysis(true);
         try {
-            await startAnalysis(project.id, instructions);
+            await startAnalysis(project.id, blocks, customText);
             // Optimistically update status to trigger polling UI
             setProject({ ...project, status: 'analyzing' });
             setIsLoading(true);
@@ -322,31 +319,10 @@ export default function EditorScreen() {
                 </View>
 
                 {showCalibration ? (
-                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                        <View style={styles.calibrationContainer}>
-                            <Text style={styles.calibrationTitle}>Analysis Configuration</Text>
-                            <Text style={styles.calibrationSubtitle}>
-                                AI will analyze visuals and audio to identify segments for removal.
-                                Provide specific guidance below, or proceed with default analysis.
-                            </Text>
-
-                            <TextInput
-                                style={styles.instructionInput}
-                                placeholder="e.g. 'Remove hesitations', 'Keep introductions'..."
-                                placeholderTextColor={colors.textMuted}
-                                multiline
-                                value={instructions}
-                                onChangeText={setInstructions}
-                            />
-
-                            <GradientButton
-                                title="Begin Analysis"
-                                onPress={handleStartAnalysis}
-                                loading={isStartingAnalysis}
-                                style={styles.startButton}
-                            />
-                        </View>
-                    </TouchableWithoutFeedback>
+                    <PromptBuilder
+                        onSubmit={handleStartAnalysis}
+                        loading={isStartingAnalysis}
+                    />
                 ) : showAnalyzing ? (
                     /* Analyzing State - Show skeleton + animated indicator */
                     <>
@@ -458,40 +434,6 @@ const styles = StyleSheet.create({
         color: colors.textPrimary,
         fontSize: 32,
         marginLeft: 6,
-    },
-
-    calibrationContainer: {
-        flex: 1,
-        padding: spacing.lg,
-        alignItems: 'center',
-    },
-    calibrationTitle: {
-        fontSize: typography.fontSize.xl,
-        fontWeight: typography.fontWeight.bold,
-        color: colors.textPrimary,
-        marginBottom: spacing.xs,
-        marginTop: spacing.md,
-    },
-    calibrationSubtitle: {
-        fontSize: typography.fontSize.sm,
-        color: colors.textSecondary,
-        textAlign: 'center',
-        marginBottom: spacing.xl,
-        lineHeight: 20,
-    },
-    instructionInput: {
-        width: '100%',
-        backgroundColor: colors.bgSecondary,
-        borderRadius: radii.lg,
-        padding: spacing.md,
-        color: colors.textPrimary,
-        fontSize: typography.fontSize.base,
-        minHeight: 120,
-        textAlignVertical: 'top',
-        marginBottom: spacing.xl,
-    },
-    startButton: {
-        width: '100%',
     },
     closeButton: {
         position: 'absolute',

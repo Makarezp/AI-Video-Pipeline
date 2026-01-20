@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-community/slider": "^5.1.2",
     "@shopify/flash-list": "^2.2.0",
     "expo": "~52.0.25",
     "expo-asset": "~11.0.5",
@@ -16,6 +17,7 @@
     "expo-constants": "~17.0.3",
     "expo-file-system": "~18.0.12",
     "expo-font": "~13.0.4",
+    "expo-haptics": "~14.0.1",
     "expo-image-picker": "~16.0.3",
     "expo-linear-gradient": "~14.0.2",
     "expo-linking": "~7.0.3",
