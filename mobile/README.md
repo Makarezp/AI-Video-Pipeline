@@ -16,9 +16,11 @@ The mobile companion app for **Garbage In, Gold Out**, built with Expo and React
 ## 🚀 Features
 
 - **Project Library**: A persistent dashboard to manage and resume multiple editing sessions.
-- **Background AI Pipeline**: 
-  - **Upload & Calibrate**: Upload your video and instruct the AI on what to focus on (e.g., "Remove redundancy," "Keep the funny parts").
-  - **Deferred Analysis**: Analysis starts only when you click "Begin Analysis," allowing you to review the raw video first.
+- **Prompt Builder (Calibration)**:
+  - **Building Blocks UI**: Toggle predefined editing preferences (e.g., "Remove Ums & Uhs", "Keep Thinking Pauses")
+  - **Configurable Thresholds**: Adjust "Dead Air" silence detection with inline slider (1-5s)
+  - **Custom Instructions**: Add freeform guidance for the AI
+  - **Deferred Analysis**: Analysis starts only when you click "Begin Analysis"
 - **Auto-Save Editor**: 
   - **Persistent State**: Changes are automatically synced to the backend as you edit.
   - **Thumbnail Filmstrip**: Visual frame-by-frame preview generated at 1 FPS for precise scrubbing.

@@ -46,8 +46,9 @@ gigo/
 
 ## 📡 API Endpoints
 
+- `GET /prompt-blocks` - Get available prompt building blocks for analysis configuration
 - `POST /projects` - Upload video & create project (generates thumbnails)
-- `POST /projects/{id}/analyze` - Start analysis with optional user instructions
+- `POST /projects/{id}/analyze` - Start analysis with structured prompt blocks
 - `GET /projects` - List all projects
 - `GET /projects/{id}` - Get project status & metadata (includes `thumbnail_count`)
 - `GET /projects/{id}/edl` - Get interactive timeline
