@@ -66,59 +66,42 @@ export default function EditorScreen() {
     const [isRendering, setIsRendering] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Initial Load & Polling
-    useEffect(() => {
+    // Polling function - defined outside useEffect so it can be called from handleStartAnalysis
+    const pollForStatus = useCallback(async () => {
         if (!projectId) return;
 
-        let isMounted = true;
-        let timeoutId: NodeJS.Timeout;
+        try {
+            const proj = await getProject(projectId);
+            setProject(proj);
 
-        const loadData = async () => {
-            try {
-                const proj = await getProject(projectId);
+            if (proj.status === 'ready') {
+                const [edl, transcriptData] = await Promise.all([
+                    getProjectTimeline(projectId),
+                    getProjectTranscript(projectId)
+                ]);
 
-                if (!isMounted) return;
-                setProject(proj);
-
-                // If user accidentally lands on editor with "created" status but we started analysis locally
-                if (proj.status === 'created' && isStartingAnalysis) {
-                    // Do nothing, wait for local state to update or just show analyzing
-                }
-
-                if (proj.status === 'ready') {
-                    const [edl, transcriptData] = await Promise.all([
-                        getProjectTimeline(projectId),
-                        getProjectTranscript(projectId)
-                    ]);
-
-                    if (isMounted) {
-                        if (edl) setTimeline(edl);
-                        if (transcriptData) setTranscript(transcriptData);
-                        setIsLoading(false);
-                    }
-                } else if (proj.status === 'failed') {
-                    Alert.alert('Analysis Failed', 'The AI analysis could not complete.');
-                    setIsLoading(false);
-                } else if (proj.status === 'analyzing') {
-                    // Still analyzing - schedule next poll
-                    setIsLoading(true);
-                    timeoutId = setTimeout(loadData, 3000);
-                }
-            } catch (error) {
-                console.error('Failed to load project:', error);
-                if (isMounted) {
-                    Alert.alert('Error', 'Failed to load project');
-                }
+                if (edl) setTimeline(edl);
+                if (transcriptData) setTranscript(transcriptData);
+                setIsLoading(false);
+            } else if (proj.status === 'failed') {
+                Alert.alert('Analysis Failed', 'The AI analysis could not complete.');
+                setIsLoading(false);
+            } else if (proj.status === 'analyzing') {
+                // Still analyzing - schedule next poll
+                setIsLoading(true);
+                setTimeout(pollForStatus, 3000);
             }
-        };
-
-        loadData();
-
-        return () => {
-            isMounted = false;
-            clearTimeout(timeoutId);
-        };
+        } catch (error) {
+            console.error('Failed to load project:', error);
+            Alert.alert('Error', 'Failed to load project');
+        }
     }, [projectId]);
+
+    // Initial Load on mount
+    useEffect(() => {
+        if (!projectId) return;
+        pollForStatus();
+    }, [projectId, pollForStatus]);
 
     const handleStartAnalysis = async () => {
         if (!project) return;
@@ -128,6 +111,10 @@ export default function EditorScreen() {
             // Optimistically update status to trigger polling UI
             setProject({ ...project, status: 'analyzing' });
             setIsLoading(true);
+            setIsStartingAnalysis(false); // Reset so calibration UI hides
+
+            // Start polling for completion
+            setTimeout(pollForStatus, 3000);
         } catch (error) {
             console.error('Failed to start analysis:', error);
             Alert.alert('Error', 'Could not start analysis.');
@@ -251,7 +238,7 @@ export default function EditorScreen() {
 
     // --- RENDER ---
 
-    const showCalibration = project?.status === 'created' || isStartingAnalysis;
+    const showCalibration = project?.status === 'created';
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
