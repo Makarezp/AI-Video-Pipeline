@@ -32,6 +32,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Timeline from '../components/Timeline';
 import TranscriptView from '../components/TranscriptView';
 import GradientButton from '../components/GradientButton';
+import { TimelineSkeleton, TranscriptSkeleton } from '../components/Skeleton';
+import AnalyzingIndicator from '../components/AnalyzingIndicator';
 import {
     TimelineSegment,
     Timeline as TimelineType,
@@ -239,6 +241,7 @@ export default function EditorScreen() {
     // --- RENDER ---
 
     const showCalibration = project?.status === 'created';
+    const showAnalyzing = isLoading && project?.status === 'analyzing';
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -344,6 +347,18 @@ export default function EditorScreen() {
                             />
                         </View>
                     </TouchableWithoutFeedback>
+                ) : showAnalyzing ? (
+                    /* Analyzing State - Show skeleton + animated indicator */
+                    <>
+                        {/* Timeline skeleton */}
+                        <TimelineSkeleton />
+
+                        {/* Animated indicator */}
+                        <AnalyzingIndicator />
+
+                        {/* Transcript skeleton */}
+                        <TranscriptSkeleton />
+                    </>
                 ) : (
                     <>
                         {/* Timeline */}
