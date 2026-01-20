@@ -1,3 +1,11 @@
+<!-- 
+AGENT GUIDE: HOW TO UPDATE THIS DOCUMENT
+Focus on the *Vision of Changes*, not the implementation details. 
+Do not list what was done. Instead, capture *why* the design evolved.
+Document the philosophical shifts, new principles discovered, and lessons learned about the user experience.
+Everything added here should reinforce or refine the core philosophy of "Invisible Precision".
+-->
+
 # GIGO Design Vision: "Invisible Precision"
 
 > **Core Philosophy**: The interface is a lens, not a painting. It should recede, leaving only the content and the control.
@@ -61,6 +69,20 @@ Major functional surfaces flush with the screen edges to maximize usable space.
 ### The Project List
 *   **Evolution**: Emojis -> Vector Icons.
 *   **Lesson**: Replacing temporary emojis with `Ionicons` instantly elevated the "Perceived Quality" of the app.
+
+### The Timeline (Virtualization vs. Simplicity)
+*   **Evolution**: `ScrollView` -> `FlashList` (Virtualization) -> `ScrollView` (Restored).
+*   **Lesson**: We fell into the "Optimization Trap". We implemented complex virtualization (`FlashList`) prematurely, which broke the "soul" of the timeline (rounded corners, visual fidelity) and the user experience (bugs). We reverted to the simpler `Animated.ScrollView` with dynamic width.
+*   **Principle**: **Scale Later.** Native ScrollView is surprisingly performant. Don't sacrifice UX for an optimization you don't need yet.
+
+### Zoom Interaction
+*   **Evolution**: `Pinch Only` -> `Pinch + Manual Buttons`.
+*   **Lesson**: Gestures are "Native", but Buttons are "Specific". Professionals sometimes need to click `(+)` to get exactly one step deeper. The simulator experience also taught us that "Accessibility" (easy input) is key for dev velocity. We now support both.
+
+### The Context Layer (Traffic Lights)
+*   **Evolution**: `Hidden` -> `Restored`.
+*   **Lesson**: We briefly removed the segment reason text and specific styling to "clean up" the UI. It felt empty. The user *needs* to know **why** AI made a decision.
+*   **Visuals**: The "Traffic Light" (top border) and the transparent vs. dimmed overlay are not just decoration; they are **State**. kept segments must be pristine (transparent bg), removed segments need to obviously recede (dimmed bg).
 
 ---
 *Last Updated: January 19, 2026*

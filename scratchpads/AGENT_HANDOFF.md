@@ -1,3 +1,12 @@
+<!--
+AGENT GUIDE: HOW TO MAINTAIN THIS DOCUMENT
+This document is the "Running Memory" of the project.
+Its purpose is to capture SIGNIFICANT changes, architectural decisions, and "gotchas" for future agents.
+It should also contain HIGH LEVEL ARCHITECTURE and ORGANIZATION of the project.
+Do not log every small commit. Log the "Why" and the "What" of major shifts.
+If you implement a complex feature or discover a tricky bug, ADD IT HERE.
+-->
+
 # 🤖 AGENT HANDOFF: Project GIGO (Garbage In, Gold Out)
 
 Welcome, Agent. You are taking over a high-precision video editing engine with a native mobile client.
