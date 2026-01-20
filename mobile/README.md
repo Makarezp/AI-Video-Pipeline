@@ -18,7 +18,7 @@ The mobile companion app for **Garbage In, Gold Out**, built with Expo and React
 - **Project Library**: A persistent dashboard to manage and resume multiple editing sessions.
 - **Background AI Pipeline**: 
   - **Upload & Calibrate**: Upload your video and instruct the AI on what to focus on (e.g., "Remove redundancy," "Keep the funny parts").
-  - **Deferred Analysis**: Analysis starts only when you say "Start Magic," allowing you to review the raw video first.
+  - **Deferred Analysis**: Analysis starts only when you click "Begin Analysis," allowing you to review the raw video first.
 - **Auto-Save Editor**: 
   - **Persistent State**: Changes are automatically synced to the backend as you edit.
   - **Thumbnail Filmstrip**: Visual frame-by-frame preview generated at 1 FPS for precise scrubbing.
@@ -92,7 +92,10 @@ mobile/
 │   ├── index.tsx         # Project Dashboard (Library list)
 │   └── editor.tsx        # Project-aware timeline editor
 ├── components/           # UI Components
-│   └── Timeline.tsx      # Custom Interactive Timeline
+│   ├── Timeline.tsx      # Interactive timeline scrubber
+│   ├── TranscriptView.tsx # Bi-directional transcript
+│   ├── Skeleton.tsx      # Loading skeleton placeholders
+│   └── AnalyzingIndicator.tsx # Minimal analyzing state indicator
 ├── utils/                # Logic & Helpers
 │   └── api.ts            # backend API integration
 └── assets/               # Icons & Splash screens
