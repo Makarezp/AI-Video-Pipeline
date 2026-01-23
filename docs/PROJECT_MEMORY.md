@@ -9,7 +9,7 @@
    - Preserve existing style, technical depth, and structure.
 3. SOURCE OF TRUTH: This README reflects the LIVE state of the project. Keep it sync'd with code.
 -->
-# 🧠 AGENT MEMORY: Ai Vid Editor
+# 🧠 AGENT MEMORY: AI Vid Editor
 
 Welcome, Agent. This is the **Active Memory** of the project.
 Read this to understand *where we are* and *what just happened*.

@@ -42,7 +42,7 @@ load_dotenv()
 logger = logging.getLogger("gigo.api")
 
 app = FastAPI(
-    title="Ai Vid Editor API",
+    title="AI Vid Editor API",
     description="Human-in-the-Loop Video Editing API",
     version="0.1.0",
 )
@@ -133,7 +133,7 @@ def run_project_analysis(project_id: str):
 @app.get("/")
 def root():
     """Health check endpoint."""
-    return {"status": "ok", "service": "Ai Vid Editor API"}
+    return {"status": "ok", "service": "AI Vid Editor API"}
 
 
 @app.get("/prompt-blocks")

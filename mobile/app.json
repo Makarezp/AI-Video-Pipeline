@@ -1,6 +1,6 @@
 {
     "expo": {
-        "name": "Ai Vid Editor",
+        "name": "AI Vid Editor",
         "slug": "ai-vid-editor",
         "version": "1.0.0",
         "orientation": "portrait",
@@ -34,14 +34,14 @@
             [
                 "expo-image-picker",
                 {
-                    "photosPermission": "Allow Ai Vid Editor to access your photos to select videos for editing.",
-                    "cameraPermission": "Allow Ai Vid Editor to access your camera to record videos."
+                    "photosPermission": "Allow AI Vid Editor to access your photos to select videos for editing.",
+                    "cameraPermission": "Allow AI Vid Editor to access your camera to record videos."
                 }
             ],
             [
                 "expo-av",
                 {
-                    "microphonePermission": "Allow Ai Vid Editor to access your microphone for video recording."
+                    "microphonePermission": "Allow AI Vid Editor to access your microphone for video recording."
                 }
             ],
             "expo-asset",
@@ -49,8 +49,8 @@
             [
                 "expo-media-library",
                 {
-                    "photosPermission": "Allow Ai Vid Editor to save edited videos to your photo gallery.",
-                    "savePhotosPermission": "Allow Ai Vid Editor to save edited videos to your photo gallery.",
+                    "photosPermission": "Allow AI Vid Editor to save edited videos to your photo gallery.",
+                    "savePhotosPermission": "Allow AI Vid Editor to save edited videos to your photo gallery.",
                     "isAccessMediaLocationEnabled": true
                 }
             ]

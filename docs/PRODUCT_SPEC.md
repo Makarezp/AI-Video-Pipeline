@@ -9,7 +9,7 @@
    - Preserve existing style, technical depth, and structure.
 3. SOURCE OF TRUTH: This README reflects the LIVE state of the project. Keep it sync'd with code.
 -->
-# 🏗️ Ai Vid Editor Product Specification
+# 🏗️ AI Vid Editor Product Specification
 
 Here is the deep, high-level blueprint of the system we are building. Think of this as the Technical Specification you would show to a co-founder.
 
