@@ -9,7 +9,7 @@
    - Preserve existing style, technical depth, and structure.
 3. SOURCE OF TRUTH: This README reflects the LIVE state of the project. Keep it sync'd with code.
 -->
-# GIGO Design System: "Invisible Precision"
+# Ai Vid Editor Design System: "Invisible Precision"
 
 > **Core Philosophy**: The interface is a lens, not a painting. It should recede, leaving only the content and the control.
 

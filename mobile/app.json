@@ -1,13 +1,13 @@
 {
     "expo": {
-        "name": "GIGO",
-        "slug": "gigo-mobile",
+        "name": "Ai Vid Editor",
+        "slug": "ai-vid-editor",
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/icon.png",
         "userInterfaceStyle": "dark",
         "newArchEnabled": true,
-        "scheme": "gigo",
+        "scheme": "aivideditor",
         "splash": {
             "image": "./assets/splash-icon.png",
             "resizeMode": "contain",
@@ -15,7 +15,7 @@
         },
         "ios": {
             "supportsTablet": true,
-            "bundleIdentifier": "com.gigo.app"
+            "bundleIdentifier": "com.aivideditor.app"
         },
         "android": {
             "adaptiveIcon": {
@@ -23,7 +23,7 @@
                 "backgroundColor": "#1a1a1a"
             },
             "edgeToEdgeEnabled": true,
-            "package": "com.gigo.app"
+            "package": "com.aivideditor.app"
         },
         "web": {
             "favicon": "./assets/favicon.png",
@@ -34,14 +34,14 @@
             [
                 "expo-image-picker",
                 {
-                    "photosPermission": "Allow GIGO to access your photos to select videos for editing.",
-                    "cameraPermission": "Allow GIGO to access your camera to record videos."
+                    "photosPermission": "Allow Ai Vid Editor to access your photos to select videos for editing.",
+                    "cameraPermission": "Allow Ai Vid Editor to access your camera to record videos."
                 }
             ],
             [
                 "expo-av",
                 {
-                    "microphonePermission": "Allow GIGO to access your microphone for video recording."
+                    "microphonePermission": "Allow Ai Vid Editor to access your microphone for video recording."
                 }
             ],
             "expo-asset",
@@ -49,8 +49,8 @@
             [
                 "expo-media-library",
                 {
-                    "photosPermission": "Allow GIGO to save edited videos to your photo gallery.",
-                    "savePhotosPermission": "Allow GIGO to save edited videos to your photo gallery.",
+                    "photosPermission": "Allow Ai Vid Editor to save edited videos to your photo gallery.",
+                    "savePhotosPermission": "Allow Ai Vid Editor to save edited videos to your photo gallery.",
                     "isAccessMediaLocationEnabled": true
                 }
             ]

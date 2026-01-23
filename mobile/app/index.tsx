@@ -132,9 +132,9 @@ export default function HomeScreen() {
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.logoContainer}>
-                    <Text style={styles.logoG}>G</Text>
+                    <Text style={styles.logoG}>Ai</Text>
                     <Ionicons name="flash" size={20} color={colors.accentAi} style={{ marginHorizontal: -2 }} />
-                    <Text style={styles.logoGO}>GO</Text>
+                    <Text style={styles.logoGO}>Vid</Text>
                 </View>
                 <TouchableOpacity style={styles.settingsButton}>
                     <Ionicons name="settings-outline" size={24} color={colors.textSecondary} />

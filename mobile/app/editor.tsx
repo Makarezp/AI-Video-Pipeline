@@ -182,7 +182,7 @@ export default function EditorScreen() {
             }
 
             const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
-            await MediaLibrary.createAlbumAsync('GIGO', asset, false);
+            await MediaLibrary.createAlbumAsync('Ai Vid Editor', asset, false);
 
             return true;
         } catch (error) {
@@ -213,7 +213,7 @@ export default function EditorScreen() {
                                     await saveToGallery(result.output_path!);
                                     Alert.alert(
                                         '✅ Saved!',
-                                        'Video saved to your gallery in the "GIGO" album.'
+                                        'Video saved to your gallery in the "Ai Vid Editor" album.'
                                     );
                                 } catch (error) {
                                     Alert.alert('Save Failed', 'Could not save video');

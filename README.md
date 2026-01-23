@@ -9,9 +9,9 @@
    - Preserve existing style, technical depth, and structure.
 3. SOURCE OF TRUTH: This README reflects the LIVE state of the project. Keep it sync'd with code.
 -->
-# Garbage In, Gold Out (GIGO)
+# Ai Vid Editor
 
-**Welcome to the GIGO Project.**
+**Welcome to the Ai Vid Editor Project.**
 
 This repository contains a **Multimodal Video Distillery** that transforms typically "bad" footage (rambling, unscripted) into "gold" (tight, viral content) using AI Agents.
 
