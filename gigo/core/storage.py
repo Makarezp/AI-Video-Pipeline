@@ -8,16 +8,18 @@ from typing import Literal, List, Optional
 from gigo.core.models import ProjectMetadata, EditDecisionList
 from gigo.adapters.ffmpeg import FFmpegVideoProcessor
 
-logger = logging.getLogger("gigo.storage")
+from gigo.core.models import ProjectMetadata, EditDecisionList
+from gigo.adapters.ffmpeg import FFmpegVideoProcessor
 
 
 class FileSystemProjectRepository:
-    def __init__(self, base_path: Path):
+    def __init__(self, base_path: Path, logger: Optional[logging.Logger] = None):
         self.base_path = base_path
         self.base_path.mkdir(parents=True, exist_ok=True)
         # Ensure base path is absolute
         self.base_path = self.base_path.resolve()
-        logger.info(f"Initialized project storage at {self.base_path}")
+        self._logger = logger or logging.getLogger("gigo.storage")
+        self._logger.info(f"Initialized project storage at {self.base_path}")
 
     def create_project_from_file(self, source_path: Path) -> ProjectMetadata:
         """Create a new project from an existing video file."""
@@ -30,14 +32,16 @@ class FileSystemProjectRepository:
         shutil.copy2(source_path, dest_video_path)
 
         # Extract video metadata
-        ffmpeg = FFmpegVideoProcessor()
+        ffmpeg = FFmpegVideoProcessor(logger=self._logger)
         duration = ffmpeg.get_duration(dest_video_path)
-        logger.info(f"Video duration: {duration:.2f}s")
+        self._logger.info(f"Video duration: {duration:.2f}s")
 
         # Generate thumbnails synchronously
         thumbnails_dir = project_dir / "thumbnails"
         thumbnail_count = ffmpeg.extract_thumbnails(dest_video_path, thumbnails_dir)
-        logger.info(f"Generated {thumbnail_count} thumbnails for project {project_id}")
+        self._logger.info(
+            f"Generated {thumbnail_count} thumbnails for project {project_id}"
+        )
 
         # Initialize metadata
         metadata = ProjectMetadata(
@@ -79,7 +83,9 @@ class FileSystemProjectRepository:
                 try:
                     projects.append(self._load_metadata(project_dir))
                 except Exception as e:
-                    logger.error(f"Failed to load project {project_dir.name}: {e}")
+                    self._logger.error(
+                        f"Failed to load project {project_dir.name}: {e}"
+                    )
 
         projects.sort(key=lambda x: x.created_at, reverse=True)
         return projects
@@ -119,7 +125,7 @@ class FileSystemProjectRepository:
             meta.status = status
             self._save_metadata(project_dir, meta)
         except Exception as e:
-            logger.error(f"Failed to update status for {project_id}: {e}")
+            self._logger.error(f"Failed to update status for {project_id}: {e}")
 
     def delete_project(self, project_id: str) -> None:
         """Delete project and all its files."""

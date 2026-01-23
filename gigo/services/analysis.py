@@ -5,13 +5,11 @@ Domain service for coordinating video analysis.
 """
 
 import asyncio
-import logging
 from pathlib import Path
+from typing import Optional
 
 from gigo.core.models import EditDecisionList, Transcript
-from gigo.core.protocols import ChunkAnalyzer, VideoAnalyzer, VideoProcessor
-
-logger = logging.getLogger("gigo.services.analysis")
+from gigo.core.protocols import ChunkAnalyzer, VideoAnalyzer, VideoProcessor, Logger
 
 
 class AnalysisService:
@@ -23,6 +21,7 @@ class AnalysisService:
 
     def __init__(
         self,
+        logger: Logger,
         analyzer: VideoAnalyzer,
         chunk_analyzer: ChunkAnalyzer,
         processor: VideoProcessor,
@@ -32,11 +31,13 @@ class AnalysisService:
         Initialize analysis service.
 
         Args:
+            logger: Injected logger
             analyzer: Video analyzer (e.g., Gemini)
             chunk_analyzer: Chunk point analyzer
             processor: Video processor for compression/splitting
             long_video_threshold: Duration (seconds) above which to use chunking
         """
+        self._logger = logger
         self._analyzer = analyzer
         self._chunk_analyzer = chunk_analyzer
         self._processor = processor
@@ -65,7 +66,7 @@ class AnalysisService:
         loop = asyncio.get_running_loop()
 
         # Compress video for analysis
-        logger.info("Compressing video for analysis...")
+        self._logger.info("Compressing video for analysis...")
         compressed_path = await loop.run_in_executor(
             None, self._processor.compress, video_path
         )
@@ -95,7 +96,7 @@ class AnalysisService:
         user_instructions: str | None = None,
     ) -> EditDecisionList:
         """Analyze long video using parallel chunking."""
-        logger.info(
+        self._logger.info(
             f"Video is long ({transcript.duration:.1f}s). Using smart chunking..."
         )
 
@@ -103,7 +104,7 @@ class AnalysisService:
         split_points = await loop.run_in_executor(
             None, self._chunk_analyzer.get_split_points, transcript
         )
-        logger.info(f"Found {len(split_points)} split points: {split_points}")
+        self._logger.info(f"Found {len(split_points)} split points: {split_points}")
 
         # Split video
         chunk_paths = await loop.run_in_executor(
@@ -130,11 +131,11 @@ class AnalysisService:
             )
 
         # Run in parallel
-        logger.info(f"Processing {len(tasks)} chunks in parallel...")
+        self._logger.info(f"Processing {len(tasks)} chunks in parallel...")
         results = await asyncio.gather(*tasks)
 
         # Merge results
-        logger.info("Merging results...")
+        self._logger.info("Merging results...")
         final_edl = self._merge_results(results, boundaries[:-1], transcript.duration)
 
         # Cleanup chunks

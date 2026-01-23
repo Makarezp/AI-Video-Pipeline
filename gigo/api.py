@@ -48,7 +48,7 @@ app = FastAPI(
 )
 
 # Initialize persistence layer
-repository = FileSystemProjectRepository(default_config.projects_dir)
+repository = FileSystemProjectRepository(default_config.projects_dir, logger=logger)
 
 # CORS for local development
 app.add_middleware(
@@ -192,6 +192,7 @@ async def upload_video(file: UploadFile = File(...)):
             "size_mb": destination.stat().st_size / 1024 / 1024,
         }
     except Exception as e:
+        logger.error(f"Upload failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
 
 
@@ -399,6 +400,7 @@ async def create_project(
         return project
 
     except Exception as e:
+        logger.error(f"Project creation failed: {e}", exc_info=True)
         if temp_path.exists():
             temp_path.unlink()
         raise HTTPException(status_code=500, detail=str(e))

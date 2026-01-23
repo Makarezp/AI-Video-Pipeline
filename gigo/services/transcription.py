@@ -4,13 +4,10 @@ Transcription Service
 Domain service for handling transcription workflow.
 """
 
-import logging
 from pathlib import Path
 
 from gigo.core.models import Transcript
-from gigo.core.protocols import TranscriptionProvider, VideoProcessor
-
-logger = logging.getLogger("gigo.services.transcription")
+from gigo.core.protocols import TranscriptionProvider, VideoProcessor, Logger
 
 
 class TranscriptionService:
@@ -25,6 +22,7 @@ class TranscriptionService:
         self,
         provider: TranscriptionProvider,
         processor: VideoProcessor,
+        logger: Logger,
     ):
         """
         Initialize transcription service.
@@ -35,6 +33,7 @@ class TranscriptionService:
         """
         self._provider = provider
         self._processor = processor
+        self._logger = logger
 
     def transcribe_video(self, video_path: Path) -> Transcript:
         """
@@ -50,7 +49,8 @@ class TranscriptionService:
             Transcript with word-level timestamps
         """
         video_path = Path(video_path)
-        logger.info(f"Transcribing video: {video_path.name}")
+        video_path = Path(video_path)
+        self._logger.info(f"Transcribing video: {video_path.name}")
 
         # Extract audio
         audio_path = self._processor.extract_audio(video_path)
@@ -58,7 +58,7 @@ class TranscriptionService:
         try:
             # Transcribe
             transcript = self._provider.transcribe(audio_path)
-            logger.info(
+            self._logger.info(
                 f"Transcription complete: {len(transcript.segments)} words, "
                 f"{transcript.duration:.1f}s"
             )

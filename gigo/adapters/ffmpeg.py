@@ -6,7 +6,6 @@ Consolidates all FFmpeg operations from hybrid.py and rendering.py.
 """
 
 import json
-import logging
 import shutil
 import subprocess
 import tempfile
@@ -14,8 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 from gigo.core.models import KeepSegment
-
-logger = logging.getLogger("gigo.adapters.ffmpeg")
+from gigo.core.protocols import Logger
 
 
 class FFmpegVideoProcessor:
@@ -31,6 +29,7 @@ class FFmpegVideoProcessor:
 
     def __init__(
         self,
+        logger: Logger,
         compression_preset: str = "ultrafast",
         compression_crf: int = 30,
         audio_bitrate: str = "128k",
@@ -49,6 +48,7 @@ class FFmpegVideoProcessor:
         self.compression_crf = compression_crf
         self.audio_bitrate = audio_bitrate
         self.audio_sample_rate = audio_sample_rate
+        self._logger = logger
 
     def extract_audio(self, video_path: Path, output_format: str = "mp3") -> Path:
         """
@@ -109,7 +109,9 @@ class FFmpegVideoProcessor:
         file_size_mb = video_path.stat().st_size / (1024 * 1024)
 
         if file_size_mb < skip_threshold_mb:
-            logger.info(f"Video is small ({file_size_mb:.1f}MB). Skipping compression.")
+            self._logger.info(
+                f"Video is small ({file_size_mb:.1f}MB). Skipping compression."
+            )
             return video_path
 
         tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
@@ -140,10 +142,12 @@ class FFmpegVideoProcessor:
             subprocess.run(cmd, capture_output=True, check=True)
             original_mb = video_path.stat().st_size / 1024 / 1024
             compressed_mb = compressed_path.stat().st_size / 1024 / 1024
-            logger.info(f"Compressed: {original_mb:.0f}MB → {compressed_mb:.1f}MB")
+            self._logger.info(
+                f"Compressed: {original_mb:.0f}MB → {compressed_mb:.1f}MB"
+            )
             return compressed_path
         except subprocess.CalledProcessError as e:
-            logger.error(f"Compression failed: {e}. Using original.")
+            self._logger.error(f"Compression failed: {e}. Using original.")
             compressed_path.unlink(missing_ok=True)
             return video_path
 
@@ -185,12 +189,14 @@ class FFmpegVideoProcessor:
 
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            logger.error(f"Thumbnail extraction failed: {result.stderr[-500:]}")
+            self._logger.error(f"Thumbnail extraction failed: {result.stderr[-500:]}")
             return 0
 
         # Count generated files
         count = len(list(output_dir.glob("thumb_*.jpg")))
-        logger.info(f"Generated {count} thumbnails in {output_dir}")
+        # Count generated files
+        count = len(list(output_dir.glob("thumb_*.jpg")))
+        self._logger.info(f"Generated {count} thumbnails in {output_dir}")
         return count
 
     def split(self, video_path: Path, timestamps: list[float]) -> list[Path]:
@@ -253,7 +259,7 @@ class FFmpegVideoProcessor:
                 if end is not None:
                     start = end
             except subprocess.CalledProcessError as e:
-                logger.error(f"Failed to split chunk {i}: {e}")
+                self._logger.error(f"Failed to split chunk {i}: {e}")
 
         return chunks
 
@@ -311,7 +317,7 @@ class FFmpegVideoProcessor:
 
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            logger.error(f"ffprobe duration failed: {result.stderr}")
+            self._logger.error(f"ffprobe duration failed: {result.stderr}")
             return 0.0
 
         data = json.loads(result.stdout)
@@ -366,7 +372,7 @@ class FFmpegVideoProcessor:
                 use_hardware_encoder,
             )
 
-            logger.info(f"Rendering {len(segments)} segments...")
+            self._logger.info(f"Rendering {len(segments)} segments...")
             result = subprocess.run(cmd, capture_output=True, text=True)
 
             if result.returncode != 0:
@@ -376,7 +382,9 @@ class FFmpegVideoProcessor:
                 raise RuntimeError("FFmpeg completed but output file not found")
 
             output_size = output_path.stat().st_size / 1024 / 1024
-            logger.info(f"Render complete: {output_path.name} ({output_size:.1f}MB)")
+            self._logger.info(
+                f"Render complete: {output_path.name} ({output_size:.1f}MB)"
+            )
 
             return output_path
         finally:

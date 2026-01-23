@@ -64,6 +64,7 @@ def create_orchestrator(
 
     # Create adapters
     ffmpeg = FFmpegVideoProcessor(
+        logger=logger,
         compression_preset=config.ffmpeg.compression_preset,
         compression_crf=config.ffmpeg.compression_crf,
         audio_bitrate=config.ffmpeg.audio_bitrate,
@@ -94,9 +95,11 @@ def create_orchestrator(
     transcription_service = TranscriptionService(
         provider=whisper,
         processor=ffmpeg,
+        logger=logger,
     )
 
     analysis_service = AnalysisService(
+        logger=logger,
         analyzer=gemini_analyzer,
         chunk_analyzer=chunk_analyzer,
         processor=ffmpeg,
