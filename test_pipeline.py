@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""
-Test script for the GarbageInGoldOut pipeline.
-
-Usage:
-    python test_pipeline.py /path/to/your/video.mp4
-"""
 
 import sys
 import json

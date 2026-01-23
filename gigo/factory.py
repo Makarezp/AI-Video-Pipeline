@@ -17,6 +17,7 @@ from gigo.adapters.gemini import (
     GeminiVideoAnalyzer,
 )
 from gigo.adapters.whisper import WhisperTranscriptionAdapter
+from gigo.adapters.logging import ConsoleLogger
 from gigo.config import GIGOConfig, default_config
 from gigo.core.orchestrator import VideoOrchestrator
 from gigo.services.analysis import AnalysisService
@@ -55,6 +56,11 @@ def create_orchestrator(
     # Create clients
     openai_client = OpenAI(api_key=openai_key)
     gemini_client = genai.Client(api_key=gemini_key)
+
+    gemini_client = genai.Client(api_key=gemini_key)
+
+    # Create logger
+    logger = ConsoleLogger(name="gigo")
 
     # Create adapters
     ffmpeg = FFmpegVideoProcessor(
@@ -105,6 +111,7 @@ def create_orchestrator(
         punctuation_restorer=punctuation_restorer,
         analysis_service=analysis_service,
         timeline_service=timeline_service,
+        logger=logger,
     )
 
 

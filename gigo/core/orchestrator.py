@@ -7,14 +7,13 @@ This is the refactored version of HybridVideoService.
 
 import logging
 from pathlib import Path
+from typing import Optional
 
-from gigo.core.protocols import PunctuationRestorer
+from gigo.core.protocols import PunctuationRestorer, Logger
 from gigo.core.models import EditDecisionList, InteractiveEDL, Transcript
 from gigo.services.transcription import TranscriptionService
 from gigo.services.analysis import AnalysisService
 from gigo.services.timeline import TimelineService
-
-logger = logging.getLogger("gigo.orchestrator")
 
 
 class VideoOrchestrator:
@@ -36,6 +35,7 @@ class VideoOrchestrator:
         punctuation_restorer: PunctuationRestorer,
         analysis_service: AnalysisService,
         timeline_service: TimelineService,
+        logger: Logger,
     ):
         """
         Initialize orchestrator with injected services.
@@ -45,14 +45,16 @@ class VideoOrchestrator:
             punctuation_restorer: Service for punctuation restoration
             analysis_service: Service for video analysis
             timeline_service: Service for timeline operations
+            logger: Logging service
         """
         self._transcription = transcription_service
         self._punctuation_restorer = punctuation_restorer
         self._analysis = analysis_service
         self._timeline = timeline_service
+        self._logger = logger
 
     async def process_async(
-        self, video_path: Path, user_instructions: str | None = None
+        self, video_path: Path, user_instructions: Optional[str] = None
     ) -> tuple[EditDecisionList, Transcript]:
         """
         Process a video through the full analysis pipeline.
@@ -65,26 +67,26 @@ class VideoOrchestrator:
             EditDecisionList with keep/remove decisions
         """
         video_path = Path(video_path)
-        logger.info(f"Starting analysis of {video_path.name}")
+        self._logger.info(f"Starting analysis of {video_path.name}")
 
         # Step 1: Transcribe
-        logger.info("[1/3] Transcribing with Whisper...")
+        self._logger.info("[1/3] Transcribing with Whisper...")
         transcript = self._transcription.transcribe_video(video_path)
-        logger.info(
+        self._logger.info(
             f"      Found {len(transcript.segments)} words in {transcript.duration:.1f}s"
         )
 
         # Step 2: Restore Punctuation
-        logger.info("[2/3] Restoring punctuation with Gemini...")
+        self._logger.info("[2/3] Restoring punctuation with Gemini...")
         transcript = self._punctuation_restorer.restore_punctuation(transcript)
 
         # Step 3: Analyze
-        logger.info("[3/3] Analyzing with Gemini...")
+        self._logger.info("[3/3] Analyzing with Gemini...")
         edl = await self._analysis.analyze_async(
             video_path, transcript, user_instructions
         )
 
-        logger.info(
+        self._logger.info(
             f"Analysis complete: {len(edl.keep_segments)} segments, "
             f"{edl.compression_ratio:.1%} kept"
         )
@@ -92,7 +94,7 @@ class VideoOrchestrator:
         return edl, transcript
 
     def process(
-        self, video_path: Path, user_instructions: str | None = None
+        self, video_path: Path, user_instructions: Optional[str] = None
     ) -> tuple[EditDecisionList, Transcript]:
         """Sync wrapper for process_async."""
         import asyncio

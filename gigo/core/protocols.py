@@ -11,6 +11,26 @@ from typing import Protocol, Optional
 from .models import Transcript, EditDecisionList
 
 
+class Logger(Protocol):
+    """Protocol for logging services."""
+
+    def info(self, message: str, **kwargs) -> None:
+        """Log info message."""
+        ...
+
+    def error(self, message: str, **kwargs) -> None:
+        """Log error message."""
+        ...
+
+    def warning(self, message: str, **kwargs) -> None:
+        """Log warning message."""
+        ...
+
+    def debug(self, message: str, **kwargs) -> None:
+        """Log debug message."""
+        ...
+
+
 class TranscriptionProvider(Protocol):
     """Protocol for speech-to-text services (e.g., Whisper)."""
 
