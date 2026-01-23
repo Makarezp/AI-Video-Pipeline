@@ -44,6 +44,27 @@ gigo/
 6. **Parallel Analysis** → Concurrent Gemini 3 analysis
 5. **Mobile Editor** → Persistent timeline state & background rendering
 
+## 📝 Logging & Observability
+
+GIGO uses a **Protocol-based Logging** system to ensure testability and flexibility.
+
+- **`LoggerProtocol`** (`gigo.core.protocols`): The interface that all services depend on.
+- **`ConsoleLogger`** (`gigo.adapters.logging`): The concrete implementation using Python's standard `logging`.
+
+### Usage Pattern
+Services should **never** import `logging` directly. Instead, accept a `Logger` in `__init__`:
+
+```python
+from gigo.core.protocols import Logger
+
+class MyService:
+    def __init__(self, logger: Logger):
+        self._logger = logger
+
+    def do_work(self):
+        self._logger.info("Starting work...")
+```
+
 ## 📡 API Endpoints
 
 - `GET /prompt-blocks` - Get available prompt building blocks for analysis configuration

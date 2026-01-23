@@ -121,6 +121,11 @@ We are not just building features; we are building a maintainable, modular syste
     -   **Imports Matter**: Functional code should be importable without side effects.
     -   **Dependency Injection**: Do not instantiate external services (like DBs or AI clients) inside logic classes. Pass them in via `__init__` or Protocol interfaces.
 
+4.  **Observability & Logging**:
+    -   **Visibility is Mandatory**: New features must include logging. If it's not logged, it didn't happen.
+    -   **Use the Protocol**: Always depend on `LoggerProtocol`, not `print()` or `logging` directly.
+    -   **Context Matters**: Log *what* happened, *why* (context), and *for whom* (e.g., project ID).
+
 ---
 
 *Raw Footage in, Viral Content out.*
