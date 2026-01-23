@@ -1,5 +1,5 @@
 <!--
-🤖 AGENT INSTRUCTION: DOCUMENTATION MAINTENANCE
+ AGENT INSTRUCTION: DOCUMENTATION MAINTENANCE
 1. CONTEXT CHECK: Before editing, ask yourself: "Did my recent code changes affect Architecture, Setup, or Public API?"
    - NO: Do not touch this file.
    - YES: Update ONLY the specific sections that changed.
@@ -9,7 +9,7 @@
    - Preserve existing style, technical depth, and structure.
 3. SOURCE OF TRUTH: This README reflects the LIVE state of the project. Keep it sync'd with code.
 -->
-# 🧠 AGENT MEMORY: AI Vid Editor
+# AGENT MEMORY: AI Vid Editor
 
 Welcome, Agent. This is the **Active Memory** of the project.
 Read this to understand *where we are* and *what just happened*.
@@ -18,12 +18,12 @@ Welcome, Agent. You are taking over a high-precision video editing engine with a
 
 ---
 
-## 🎯 The Mission
+## The Mission
 Transform rambling, unscripted "talking head" videos into tight, viral content by combining **Whisper timestamps** with **Gemini 3 Vision**.
 
 ---
 
-## 🛠️ Architecture Overview
+## Architecture Overview
 
 ### Backend: Clean Architecture (`gigo/`)
 ```
@@ -63,7 +63,7 @@ mobile/
 
 ---
 
-## 📍 Key Entry Points
+## Key Entry Points
 
 | File | Purpose |
 |------|---------|
@@ -75,7 +75,7 @@ mobile/
 
 ---
 
-## 🤖 Agent Verification Capabilities
+##  Agent Verification Capabilities
 
 The agent has configured access to the **iOS Simulator MCP Server**. This allows autonomous verification of mobile app features:
 - **UI Inspection**: reading accessibility trees (`ui_describe_all`).
@@ -86,7 +86,7 @@ The agent has configured access to the **iOS Simulator MCP Server**. This allows
 
 ---
 
-## ✅ What's Done
+##  What's Done
 
 ### Clean Architecture Refactoring
 - [x] **Adapters**: FFmpeg, Whisper, Gemini extracted (675 lines)
@@ -122,7 +122,7 @@ The agent has configured access to the **iOS Simulator MCP Server**. This allows
 
 ---
 
-## 🚀 Future Objectives
+##  Future Objectives
 1. **Unit Tests**: Mock adapters for fast testing
 2. **Multi-File Rendering**: Parallel segment rendering
 3. **Mobile Polish**: Animations, haptic feedback, export/share options
@@ -130,7 +130,7 @@ The agent has configured access to the **iOS Simulator MCP Server**. This allows
 
 ---
 
-## 📝 Documentation Policy
+##  Documentation Policy
 
 After each significant change, update these files to reflect the **current product state**:
 
@@ -156,7 +156,7 @@ After each significant change, update these files to reflect the **current produ
 
 **Goal**: A new agent should understand the product's *current* capabilities in under 5 minutes.
 
-## 🏃 Quick Start
+##  Quick Start
 
 ### Backend API
 ```bash

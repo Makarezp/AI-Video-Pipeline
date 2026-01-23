@@ -1,5 +1,5 @@
 <!--
-🤖 AGENT INSTRUCTION: DOCUMENTATION MAINTENANCE
+ AGENT INSTRUCTION: DOCUMENTATION MAINTENANCE
 1. CONTEXT CHECK: Before editing, ask yourself: "Did my recent code changes affect Architecture, Setup, or Public API?"
    - NO: Do not touch this file.
    - YES: Update ONLY the specific sections that changed.

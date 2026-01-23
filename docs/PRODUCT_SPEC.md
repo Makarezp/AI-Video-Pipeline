@@ -1,5 +1,5 @@
 <!--
-🤖 AGENT INSTRUCTION: DOCUMENTATION MAINTENANCE
+ AGENT INSTRUCTION: DOCUMENTATION MAINTENANCE
 1. CONTEXT CHECK: Before editing, ask yourself: "Did my recent code changes affect Architecture, Setup, or Public API?"
    - NO: Do not touch this file.
    - YES: Update ONLY the specific sections that changed.
@@ -9,7 +9,7 @@
    - Preserve existing style, technical depth, and structure.
 3. SOURCE OF TRUTH: This README reflects the LIVE state of the project. Keep it sync'd with code.
 -->
-# 🏗️ AI Vid Editor Product Specification
+# AI Vid Editor Product Specification
 
 Here is the deep, high-level blueprint of the system we are building. Think of this as the Technical Specification you would show to a co-founder.
 
@@ -105,7 +105,7 @@ Most apps edit based on "silence." We edit based on **Intent** and **Context**.
 **Agents working on this project must adhere to strict code quality standards.**
 We are not just building features; we are building a maintainable, modular system.
 
-### 🧱 Core Principles
+### Core Principles
 
 1.  **Clean Architecture**:
     -   Respect the dependency rule. `Core` (Models) knows nothing about `Services`. `Services` know nothing about `Adapters`.
