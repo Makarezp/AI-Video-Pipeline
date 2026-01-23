@@ -11,7 +11,7 @@
 -->
 # GIGO Mobile Client
 
-The mobile companion app for **Garbage In, Gold Out**, built with Expo and React Native. This app allows you to upload rambling "talking head" videos, have them analyzed by AI, and tight-track the edits using a custom timeline editor.
+The mobile companion app for **AI Vid Editor**, built with Expo and React Native. This app allows you to upload rambling "talking head" videos, have them analyzed by AI, and tight-track the edits using a custom timeline editor.
 
 ## 🚀 Features
 

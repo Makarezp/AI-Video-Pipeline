@@ -54,6 +54,9 @@ export const gradients = {
     // AI gradient for premium/magic actions
     ai: ['#22D3EE', '#0EA5E9'] as const,
 
+    // Premium gradient (Gold/Amber)
+    premium: ['#F59E0B', '#B45309'] as const,
+
     // Danger gradient for remove actions
     danger: ['#EF4444', '#DC2626'] as const,
 } as const;

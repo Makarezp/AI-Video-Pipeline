@@ -19,7 +19,7 @@ import { colors, gradients, typography, spacing, radii } from '../utils/theme';
 interface GradientButtonProps {
     title: string;
     onPress: () => void;
-    variant?: 'primary' | 'gold' | 'danger';
+    variant?: 'primary' | 'premium' | 'danger';
     size?: 'sm' | 'md' | 'lg';
     icon?: React.ReactNode;
     disabled?: boolean;
@@ -39,7 +39,7 @@ export default function GradientButton({
 }: GradientButtonProps) {
     const gradientColors = {
         primary: gradients.primary,
-        gold: gradients.gold,
+        premium: gradients.premium,
         danger: gradients.danger,
     }[variant];
 

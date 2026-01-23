@@ -1,12 +1,12 @@
 """
-GarbageInGoldOut - Core Data Models
+AI Vid Editor - Core Data Models
 
 All data contracts between services are defined here using Pydantic.
 This ensures type safety and validation across the entire pipeline.
 """
 
 from pydantic import BaseModel, Field, field_validator
-from typing import Literal, Protocol
+from typing import Literal, Protocol, Optional
 from pathlib import Path
 
 
@@ -87,7 +87,7 @@ class EditDecisionList(BaseModel):
     """The output of the editorial service - what to keep."""
 
     keep_segments: list[KeepSegment]
-    interactive_segments: list["TimelineSegment"] | None = None
+    interactive_segments: Optional[list["TimelineSegment"]] = None
     original_duration: float
     final_duration: float = 0.0
     compression_ratio: float = 0.0
@@ -173,4 +173,4 @@ class ProjectMetadata(BaseModel):
     thumbnail_path: str = ""
     thumbnail_count: int = 0
     source_video_path: str = ""
-    user_instructions: str | None = None
+    user_instructions: Optional[str] = None

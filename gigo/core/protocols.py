@@ -6,7 +6,7 @@ and easy mocking for tests.
 """
 
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, Optional
 
 from .models import Transcript, EditDecisionList
 
@@ -34,7 +34,7 @@ class VideoAnalyzer(Protocol):
         self,
         video_path: Path,
         transcript: Transcript,
-        user_instructions: str | None = None,
+        user_instructions: Optional[str] = None,
     ) -> EditDecisionList:
         """
         Analyze video content and decide which segments to keep/remove.

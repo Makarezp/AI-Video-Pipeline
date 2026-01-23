@@ -9,7 +9,7 @@
    - Preserve existing style, technical depth, and structure.
 3. SOURCE OF TRUTH: This README reflects the LIVE state of the project. Keep it sync'd with code.
 -->
-# 🎬 GarbageInGoldOut (GIGO) Video Engine
+# 🎬 AI Vid Editor (GIGO) Video Engine
 
 A "Multimodal Video Distillery" that transforms rambling, unscripted footage into tight, high-energy content.
 
@@ -99,4 +99,4 @@ Then open http://localhost:5173
 - `test_render.py` - Final video rendering
 
 ---
-*Garbage in, viral gold out.*
+*Raw Footage in, Viral Content out.*

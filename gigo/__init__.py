@@ -1,4 +1,4 @@
-"""GarbageInGoldOut - Semantic Video Distillery"""
+"""AI Vid Editor - Semantic Video Distillery"""
 
 from .factory import create_orchestrator
 from .core.models import (

@@ -13,7 +13,7 @@
 
 **Welcome to the AI Vid Editor Project.**
 
-This repository contains a **Multimodal Video Distillery** that transforms typically "bad" footage (rambling, unscripted) into "gold" (tight, viral content) using AI Agents.
+This repository contains a **Multimodal Video Distillery** that transforms typically "bad" footage (rambling, unscripted) into "viral content" (tight, engaging) using AI Agents.
 
 ---
 
@@ -54,4 +54,4 @@ You are changing the system flow, data models, or understanding the "Why".
 
 ---
 
-*Garbage in, viral gold out.*
+*Raw Footage in, Viral Content out.*

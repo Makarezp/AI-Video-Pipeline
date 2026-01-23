@@ -100,7 +100,7 @@ Most apps edit based on "silence." We edit based on **Intent** and **Context**.
 
 ---
 
-## 5. Engineering Standards (The "Gold" Standard)
+## 5. Engineering Standards
 
 **Agents working on this project must adhere to strict code quality standards.**
 We are not just building features; we are building a maintainable, modular system.
@@ -123,4 +123,4 @@ We are not just building features; we are building a maintainable, modular syste
 
 ---
 
-*Garbage in, viral gold out.*
+*Raw Footage in, Viral Content out.*
