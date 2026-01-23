@@ -1,9 +1,12 @@
 /**
  * PromptBuilder Component
  * 
- * A SectionList-based UI for selecting analysis preferences.
- * Users can toggle predefined "blocks" (remove/keep instructions)
- * and optionally add custom instructions.
+ * A "Control Panel" style UI for configuring AI analysis.
+ * Implements "Invisible Precision" design system:
+ * - No Checkboxes (Row is the toggle)
+ * - Ghost (Inactive) vs Solid (Active) states
+ * - Monospace Headers
+ * - Traffic Light Logic (Green/Red accents)
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -15,10 +18,12 @@ import {
     TouchableOpacity,
     TextInput,
     ActivityIndicator,
+    Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, typography, spacing, radii } from '../utils/theme';
 import { PromptBlock, BlockState, getPromptBlocks } from '../utils/api';
@@ -107,15 +112,15 @@ export default function PromptBuilder({ onSubmit, loading }: PromptBuilderProps)
         onSubmit(statesArray, customText);
     }, [blockStates, customText, onSubmit]);
 
-    // Prepare sections for SectionList
+    // Prepare sections
     const sections: Section[] = [
         {
-            title: 'AI will remove',
+            title: 'AUTO-HIDE',
             type: 'remove',
             data: blocks.filter(b => b.type === 'remove'),
         },
         {
-            title: 'AI will keep',
+            title: 'KEEP VISIBLE',
             type: 'keep',
             data: blocks.filter(b => b.type === 'keep'),
         },
@@ -127,77 +132,72 @@ export default function PromptBuilder({ onSubmit, loading }: PromptBuilderProps)
         const isEnabled = state?.enabled ?? true;
         const configValue = state?.config[item.config_options?.param || ''] as number | undefined;
 
+        // Dynamic Styles based on Active State
+        const activeBorderColor = item.type === 'remove' ? colors.danger : colors.success;
+
         return (
             <TouchableOpacity
-                style={styles.blockRow}
+                style={[
+                    styles.blockRow,
+                    isEnabled && styles.blockRowActive,
+                    isEnabled && { borderLeftColor: activeBorderColor }
+                ]}
                 onPress={() => toggleBlock(item.id)}
-                activeOpacity={0.7}
+                activeOpacity={0.8}
             >
-                <View style={styles.blockHeader}>
-                    <View style={[
-                        styles.checkbox,
-                        isEnabled && styles.checkboxEnabled,
-                        item.type === 'remove' && isEnabled && styles.checkboxRemove,
-                        item.type === 'keep' && isEnabled && styles.checkboxKeep,
-                    ]}>
-                        {isEnabled && (
-                            <Ionicons name="checkmark" size={14} color={colors.bgPrimary} />
-                        )}
-                    </View>
-                    <View style={styles.blockText}>
-                        <Text style={[styles.blockLabel, !isEnabled && styles.blockLabelDisabled]}>
+                <View style={styles.blockContent}>
+                    <View style={styles.headerRow}>
+                        <Text style={[styles.blockLabel, !isEnabled && styles.textDim]}>
                             {item.label}
                         </Text>
-                        <Text style={[styles.blockDescription, !isEnabled && styles.blockDescriptionDisabled]}>
-                            {item.description}
-                        </Text>
+                        {isEnabled && (
+                            <Ionicons
+                                name={item.type === 'remove' ? 'eye-off' : 'eye'}
+                                size={16}
+                                color={activeBorderColor}
+                            />
+                        )}
                     </View>
-                </View>
 
-                {/* Slider for configurable blocks */}
-                {item.config_type === 'slider' && item.config_options && isEnabled && (
-                    <View style={styles.sliderContainer}>
-                        <Slider
-                            style={styles.slider}
-                            minimumValue={item.config_options.min || 0}
-                            maximumValue={item.config_options.max || 10}
-                            step={1}
-                            value={configValue ?? item.config_options.default ?? 0}
-                            onValueChange={(value) => {
-                                if (item.config_options?.param) {
-                                    updateBlockConfig(item.id, item.config_options.param, value);
-                                }
-                            }}
-                            minimumTrackTintColor={colors.accentPrimary}
-                            maximumTrackTintColor={colors.bgTertiary}
-                            thumbTintColor={colors.textPrimary}
-                        />
-                        <Text style={styles.sliderValue}>
-                            {configValue ?? item.config_options.default}{item.config_options.unit || ''}
-                        </Text>
-                    </View>
-                )}
+                    <Text style={[styles.blockDescription, !isEnabled && styles.textDim]}>
+                        {item.description}
+                    </Text>
+
+                    {/* Slider for configurable blocks */}
+                    {item.config_type === 'slider' && item.config_options && isEnabled && (
+                        <View style={styles.sliderContainer}>
+                            <Slider
+                                style={styles.slider}
+                                minimumValue={item.config_options.min || 0}
+                                maximumValue={item.config_options.max || 10}
+                                step={1}
+                                value={configValue ?? item.config_options.default ?? 0}
+                                onValueChange={(value) => {
+                                    if (item.config_options?.param) {
+                                        updateBlockConfig(item.id, item.config_options.param, value);
+                                    }
+                                }}
+                                minimumTrackTintColor={activeBorderColor}
+                                maximumTrackTintColor={colors.bgTertiary}
+                                thumbTintColor={colors.textPrimary}
+                            />
+                            <Text style={[styles.sliderValue, { color: activeBorderColor }]}>
+                                {configValue ?? item.config_options.default}{item.config_options.unit || ''}
+                            </Text>
+                        </View>
+                    )}
+                </View>
             </TouchableOpacity>
         );
     };
 
     // Render section header
     const renderSectionHeader = ({ section }: { section: Section }) => (
-        <View style={[
-            styles.sectionHeader,
-            section.type === 'remove' && styles.sectionHeaderRemove,
-            section.type === 'keep' && styles.sectionHeaderKeep,
-        ]}>
-            <Ionicons
-                name={section.type === 'remove' ? 'close-circle' : 'checkmark-circle'}
-                size={18}
-                color={section.type === 'remove' ? colors.danger : colors.success}
-            />
+        <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
         </View>
     );
 
-    // Loading state
     if (isLoadingBlocks) {
         return (
             <View style={styles.loadingContainer}>
@@ -219,29 +219,34 @@ export default function PromptBuilder({ onSubmit, loading }: PromptBuilderProps)
                     <View style={styles.footer}>
                         {/* Custom instruction toggle */}
                         <TouchableOpacity
-                            style={styles.customToggle}
+                            style={[
+                                styles.customToggle,
+                                showCustomInput && styles.customToggleActive
+                            ]}
                             onPress={() => setShowCustomInput(!showCustomInput)}
                         >
-                            <Ionicons
-                                name={showCustomInput ? 'remove-circle-outline' : 'add-circle-outline'}
-                                size={20}
-                                color={colors.textSecondary}
-                            />
-                            <Text style={styles.customToggleText}>
-                                {showCustomInput ? 'Hide custom instruction' : 'Add custom instruction'}
+                            <Text style={[
+                                styles.customToggleText,
+                                showCustomInput ? { color: colors.textPrimary } : { color: colors.textSecondary }
+                            ]}>
+                                {showCustomInput ? '> HIDE CUSTOM INSTRUCTIONS' : '> ADD CUSTOM INSTRUCTIONS'}
                             </Text>
                         </TouchableOpacity>
 
                         {/* Custom instruction input */}
                         {showCustomInput && (
-                            <TextInput
-                                style={styles.customInput}
-                                placeholder="e.g., 'Focus on the product demo section'"
-                                placeholderTextColor={colors.textMuted}
-                                multiline
-                                value={customText}
-                                onChangeText={setCustomText}
-                            />
+                            <View style={styles.terminalInputContainer}>
+                                <Text style={styles.terminalPrefix}>$</Text>
+                                <TextInput
+                                    style={styles.terminalInput}
+                                    placeholder="Enter additional constraints..."
+                                    placeholderTextColor={colors.textMuted}
+                                    multiline
+                                    value={customText}
+                                    onChangeText={setCustomText}
+                                    autoFocus
+                                />
+                            </View>
                         )}
                     </View>
                 )}
@@ -250,7 +255,7 @@ export default function PromptBuilder({ onSubmit, loading }: PromptBuilderProps)
             {/* Fixed Bottom Footer */}
             <View style={styles.fixedFooter}>
                 <GradientButton
-                    title="Begin Analysis"
+                    title="INITIALIZE ANALYSIS"
                     onPress={handleSubmit}
                     loading={loading}
                     style={styles.submitButton}
@@ -263,7 +268,7 @@ export default function PromptBuilder({ onSubmit, loading }: PromptBuilderProps)
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        position: 'relative', // Ensure absolute positioning works for footer
+        position: 'relative',
     },
     loadingContainer: {
         flex: 1,
@@ -272,117 +277,128 @@ const styles = StyleSheet.create({
     },
     listContent: {
         paddingHorizontal: spacing.base,
-        paddingBottom: 100, // Make space for fixed footer
+        paddingBottom: 120, // Space for fixed footer
     },
+    // Section Headers
     sectionHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
         paddingVertical: spacing.md,
-        paddingHorizontal: spacing.xs,
-        marginTop: spacing.md,
-    },
-    sectionHeaderRemove: {},
-    sectionHeaderKeep: {
-        marginTop: spacing.xl,
-    },
-    sectionTitle: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.semibold,
-        color: colors.textSecondary,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-    },
-    blockRow: {
-        backgroundColor: colors.bgSecondary,
-        borderRadius: radii.lg,
-        padding: spacing.md,
+        marginTop: spacing.lg,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.bgTertiary,
         marginBottom: spacing.sm,
     },
-    blockHeader: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: spacing.md,
+    sectionTitle: {
+        fontSize: typography.fontSize.xs,
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', // Monospaced
+        color: colors.textSecondary,
+        letterSpacing: 1.5,
     },
-    checkbox: {
-        width: 22,
-        height: 22,
-        borderRadius: radii.md,
-        borderWidth: 2,
-        borderColor: colors.textMuted,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 2,
+    // Block Row (The Card)
+    blockRow: {
+        backgroundColor: 'transparent', // Ghost by default
+        borderLeftWidth: 3,
+        borderLeftColor: colors.textMuted, // Inactive accent
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.md,
+        marginBottom: spacing.xs,
+        borderRadius: 2, // Technical sharp corners
+        borderWidth: 1,
+        borderColor: colors.bgTertiary,
+        opacity: 0.6, // Dim inactive
     },
-    checkboxEnabled: {
+    blockRowActive: {
+        backgroundColor: colors.bgSecondary, // Solid background
         borderColor: 'transparent',
+        opacity: 1, // Full visibility
     },
-    checkboxRemove: {
-        backgroundColor: colors.danger,
-    },
-    checkboxKeep: {
-        backgroundColor: colors.success,
-    },
-    blockText: {
+    blockContent: {
         flex: 1,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    activeDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
     },
     blockLabel: {
         fontSize: typography.fontSize.base,
-        fontWeight: typography.fontWeight.medium,
+        fontWeight: typography.fontWeight.semibold,
         color: colors.textPrimary,
-        marginBottom: 2,
-    },
-    blockLabelDisabled: {
-        color: colors.textMuted,
+        letterSpacing: 0.5,
     },
     blockDescription: {
         fontSize: typography.fontSize.sm,
         color: colors.textSecondary,
         lineHeight: 18,
     },
-    blockDescriptionDisabled: {
+    textDim: {
         color: colors.textMuted,
     },
+    // Interactive Elements
     sliderContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: spacing.md,
-        marginLeft: 34, // Align with text (checkbox width + gap)
     },
     slider: {
         flex: 1,
         height: 40,
+        marginRight: spacing.sm,
     },
     sliderValue: {
         fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.semibold,
-        color: colors.accentPrimary,
-        minWidth: 30,
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+        fontWeight: typography.fontWeight.bold,
+        minWidth: 40,
         textAlign: 'right',
     },
+    // Footer & Custom Input
     footer: {
         marginTop: spacing.xl,
+        borderTopWidth: 1,
+        borderTopColor: colors.bgTertiary,
+        paddingTop: spacing.md,
     },
     customToggle: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
         paddingVertical: spacing.md,
     },
-    customToggleText: {
-        fontSize: typography.fontSize.sm,
-        color: colors.textSecondary,
+    customToggleActive: {
+        marginBottom: spacing.xs,
     },
-    customInput: {
+    customToggleText: {
+        fontSize: typography.fontSize.xs,
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+        letterSpacing: 1,
+    },
+    terminalInputContainer: {
+        flexDirection: 'row',
         backgroundColor: colors.bgSecondary,
-        borderRadius: radii.lg,
+        borderRadius: radii.sm,
         padding: spacing.md,
+        borderLeftWidth: 3,
+        borderLeftColor: colors.accentPrimary,
+    },
+    terminalPrefix: {
+        color: colors.accentPrimary,
+        marginRight: spacing.sm,
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+        fontSize: typography.fontSize.base,
+        marginTop: Platform.OS === 'ios' ? 0 : 4,
+    },
+    terminalInput: {
+        flex: 1,
         color: colors.textPrimary,
         fontSize: typography.fontSize.base,
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
         minHeight: 80,
         textAlignVertical: 'top',
-        marginBottom: spacing.lg,
     },
+    // Fixed Button
     fixedFooter: {
         position: 'absolute',
         bottom: 0,
@@ -392,10 +408,11 @@ const styles = StyleSheet.create({
         backgroundColor: colors.bgPrimary,
         borderTopWidth: 1,
         borderTopColor: colors.bgTertiary,
-        paddingBottom: spacing.xl, // Safe area padding
+        paddingBottom: spacing.xl,
     },
     submitButton: {
         width: '100%',
+        borderRadius: radii.sm, // Technical corners
     },
 });
 
